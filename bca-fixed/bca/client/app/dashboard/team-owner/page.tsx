@@ -711,7 +711,7 @@ export default function TeamOwnerDashboard() {
                         {COLOR_PRESETS.map(c=>(
                           <button key={c} type="button" onClick={()=>setTf(p=>({...p,primaryColor:c}))}
                             className={`w-9 h-9 rounded-xl transition-all hover:scale-110 ${tf.primaryColor===c?'ring-2 ring-white ring-offset-2 scale-110':''}`}
-                            style={{background:c,ringOffset:'transparent'}}/>
+                            style={{background: c }}/>
                         ))}
                       </div>
                     </div>
