@@ -130,16 +130,21 @@ server.listen(PORT, () => {
    MongoDB (NON-BLOCKING)
 ──────────────────────────────────────────────────────────── */
 const MONGO_URI = process.env.MONGODB_URI;
+console.log('🔍 MONGODB_URI:', MONGO_URI ? 'defined' : 'undefined');
 
-mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected');
-    require('./models/ActivityLog');
-    require('./socket/auctionEngine')(io);
-  })
-  .catch(err => {
-    console.error('❌ MongoDB failed:', err.message);
-    // DO NOT STOP SERVER
-  });
+if (!MONGO_URI) {
+  console.warn('⚠️  MONGODB_URI is not set — skipping MongoDB connection');
+} else {
+  mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+      console.log('✅ MongoDB connected');
+      require('./models/ActivityLog');
+      require('./socket/auctionEngine')(io);
+    })
+    .catch(err => {
+      console.error('❌ MongoDB failed:', err.message);
+      // DO NOT STOP SERVER
+    });
+}
 
 module.exports = { app, server, io };
