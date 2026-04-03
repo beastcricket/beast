@@ -8,7 +8,7 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const backend = process.env.NEXT_PUBLIC_API_URL || 'https://bca-auction.vercel.app';
     return [
       // Proxy API calls
       { source: '/api/:path*',     destination: `${backend}/api/:path*`     },
