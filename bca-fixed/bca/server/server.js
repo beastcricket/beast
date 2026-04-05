@@ -20,34 +20,19 @@ const app    = express();
 const server = http.createServer(app);
 const isProd = process.env.NODE_ENV === 'production';
 
-// ── CORS CONFIG (FIXED) ─────────────────
+// ── CORS (FINAL FIX) ─────────────────────
 const corsOptions = {
-  origin: true,   // ✅ allow all origins (fixes CORS permanently)
+  origin: true,        // ✅ allow all origins (fixes your issue)
   credentials: true,
 };
 
-const corsOptions = {
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (!isProd) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-
-    console.warn(`CORS blocked: ${origin}`);
-    cb(new Error(`Origin not allowed`));
-  },
-  credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS','PATCH'],
-  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
-};
-
-// ✅ APPLY CORS
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 // ── Socket.io ───────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: isProd ? allowedOrigins : true,
+    origin: true,
     methods: ['GET','POST'],
     credentials: true,
   }
