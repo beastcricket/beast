@@ -8,11 +8,12 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    const backend = process.env.NEXT_PUBLIC_API_URL ||'https://bca-auction-production.up.railway.app/';
+    const backend =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.RAILWAY_BACKEND_URL ||
+      'http://localhost:5000';
     return [
-      // Proxy API calls
       { source: '/api/:path*',     destination: `${backend}/api/:path*`     },
-      // Proxy uploaded images — this is the fix for photos not showing
       { source: '/uploads/:path*', destination: `${backend}/uploads/:path*` },
     ];
   },
