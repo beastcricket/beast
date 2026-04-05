@@ -21,9 +21,10 @@ const server = http.createServer(app);
 const isProd = process.env.NODE_ENV === 'production';
 
 // ── CORS CONFIG (FIXED) ─────────────────
-const allowedOrigins = isProd
-  ? (process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean)
-  : null;
+const corsOptions = {
+  origin: true,   // ✅ allow all origins (fixes CORS permanently)
+  credentials: true,
+};
 
 const corsOptions = {
   origin: (origin, cb) => {
