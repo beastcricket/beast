@@ -41,7 +41,7 @@ export default function LoginPage() {
     if (!selectedRole) { setFormError({ text:'Please select your role first.' }); return; }
     setFormError(null); setLoading(true);
     try {
-      const res = await api.post('/auth/login', { email:d.email.trim().toLowerCase(), password:d.password, role:selectedRole });
+      const res = await api.post('/api/auth/login', { email:d.email.trim().toLowerCase(), password:d.password, role:selectedRole });
       if (res.data.token) saveToken(res.data.token);
       const actualRole = res.data.user?.role || selectedRole;
       const pathMap: Record<string,string> = { organizer:'/dashboard/organizer', team_owner:'/dashboard/team-owner', viewer:'/auctions', admin:'/bca-admin-x7k2' };
