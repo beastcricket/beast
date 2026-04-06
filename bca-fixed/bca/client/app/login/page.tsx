@@ -37,22 +37,28 @@ export default function LoginPage() {
     setFormError(null); setLoading(true);
 
     try {
-      const res = await api.post('/auth/login', {   // ✅ FIXED
+      const res = await api.post('/auth/login', {
         email: d.email.trim().toLowerCase(),
         password: d.password,
         role: selectedRole
       });
-      
+
+      // ✅ 🔥 IMPORTANT FIX (TOKEN + ROLE SAVE)
+      if (res.data.token) {
+        saveToken(res.data.token);
+        localStorage.setItem('role', res.data.user.role);
+      }
+
       console.log("TOKEN:", res.data.token);
+      console.log("ROLE:", res.data.user.role);
 
       const actualRole = res.data.user?.role || selectedRole;
 
-      // ✅ FINAL FIX (based on your structure)
       const pathMap = {
-      organizer:'/dashboard/organizer',
-      team_owner:'/dashboard/team-owner',
-      viewer:'/auctions'
-   };
+        organizer:'/dashboard/organizer',
+        team_owner:'/dashboard/team-owner',
+        viewer:'/auctions'
+      };
 
       window.location.href = pathMap[actualRole] || '/auctions';
 
