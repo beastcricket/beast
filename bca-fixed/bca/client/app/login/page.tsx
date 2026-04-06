@@ -48,12 +48,11 @@ export default function LoginPage() {
       const actualRole = res.data.user?.role || selectedRole;
 
       // ✅ FINAL FIX (based on your structure)
-      const pathMap: Record<string,string> = {
-        organizer:'/dashboard',
-        team_owner:'/dashboard',
-        viewer:'/auctions',
-        admin:'/bca-admin-x7k2'
-      };
+      const pathMap = {
+      organizer:'/dashboard/organizer',
+      team_owner:'/dashboard/team-owner',
+      viewer:'/auctions'
+   };
 
       window.location.href = pathMap[actualRole] || '/auctions';
 
