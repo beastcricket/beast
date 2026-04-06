@@ -17,7 +17,7 @@ export const clearToken = () => {
 // ✅ USE NEXT.JS REWRITE
 const api = axios.create({
   baseURL: '/api',   // 🔥 FIXED
-  withCredentials: true,
+  withCredentials: false,
   timeout: 30000,
 });
 
