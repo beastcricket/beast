@@ -212,8 +212,26 @@ router.post('/refresh', async (req, res) => {
 
 // ── ME ────────────────────────────────────────────────────────
 router.get('/me', authenticate, (req, res) =>
-  res.json({ success: true, user: req.user })
-);
+  router.get('/me', authenticate, async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // ✅ RETURN CLEAN USER OBJECT
+    res.json({
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      role: req.user.role,
+      isVerified: req.user.isVerified
+    });
+
+  } catch (err) {
+    console.log("ME ERROR:", err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // ── LOGOUT ───────────────────────────────────────────────────
 router.post('/logout', authenticate, async (req, res) => {
