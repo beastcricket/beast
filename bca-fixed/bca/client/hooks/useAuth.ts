@@ -37,7 +37,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log("AUTH RESPONSE:", res.data);
 
-      // ✅ HANDLE BOTH FORMATS SAFELY
       const userData = res.data.user || res.data;
 
       if (!userData || !userData._id) {
@@ -45,10 +44,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setUser(userData);
-    } catch (err) {
+
+    } catch (err: any) {
       console.log("AUTH ERROR:", err);
-      clearToken();
-      setUser(null);
+
+      // ✅ ONLY CLEAR TOKEN IF UNAUTHORIZED
+      if (err?.response?.status === 401) {
+        clearToken();
+        setUser(null);
+      } else {
+        // ⚠️ keep user (temporary error)
+        console.log("Temporary error, not logging out");
+      }
+
     } finally {
       setLoading(false);
     }
