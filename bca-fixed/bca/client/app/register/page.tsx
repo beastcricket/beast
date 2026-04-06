@@ -17,7 +17,7 @@ export default function RegisterPage() {
 
     setLoading(true);setError('');
     try{
-      await api.post('/api/auth/register',{   // ✅ FIXED
+      await api.post('/auth/register',{   // ✅ FIXED
         name:d.name,
         email:d.email,
         password:d.password
