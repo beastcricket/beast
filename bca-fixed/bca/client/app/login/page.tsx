@@ -37,7 +37,7 @@ export default function LoginPage() {
     setFormError(null); setLoading(true);
 
     try {
-      const res = await api.post('/api/auth/login', {   // ✅ FIXED
+      const res = await api.post('/auth/login', {   // ✅ FIXED
         email: d.email.trim().toLowerCase(),
         password: d.password,
         role: selectedRole
