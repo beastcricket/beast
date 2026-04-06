@@ -42,8 +42,8 @@ export default function LoginPage() {
         password: d.password,
         role: selectedRole
       });
-
-      if (res.data.token) saveToken(res.data.token);
+      
+      console.log("TOKEN:", res.data.token);
 
       const actualRole = res.data.user?.role || selectedRole;
 
