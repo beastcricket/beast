@@ -1,155 +1,109 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import api, { getToken } from '@/lib/api';
-import { getSocket } from '@/lib/socket';
-import { fmt, roleColors, categoryColors, roleIcons } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 import { format } from 'date-fns';
 
-// ❌ REMOVED AuthGuard & useAuth (causing redirect loop)
-
 export default function OrganizerDashboard() {
-
-  // ✅ MANUAL AUTH FIX
-  useEffect(() => {
-    const token = localStorage.getItem('bca_token');
-    const role = localStorage.getItem('role');
-
-    console.log("TOKEN:", token);
-    console.log("ROLE:", role);
-
-    if (!token) {
-      window.location.href = '/login';
-      return;
-    }
-
-    if (role !== 'organizer' && role !== 'admin') {
-      window.location.href = '/login';
-    }
-  }, []);
 
   const [auctions, setAuctions] = useState<any[]>([]);
   const [sel, setSel] = useState<any>(null);
   const [players, setPlayers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  const fetchAuctions = async () => {
-    try {
-      const r = await api.get('/auctions/my');
-      setAuctions(r.data.auctions);
-      if (r.data.auctions.length && !sel) setSel(r.data.auctions[0]);
-    } catch {}
-  };
-
+  // ✅ SIMPLE AUTH CHECK (NO AuthGuard)
   useEffect(() => {
-    fetchAuctions();
+    const token = localStorage.getItem('bca_token');
+
+    if (!token) {
+      window.location.href = '/login';
+    }
   }, []);
 
-  const fetchPlayers = async () => {
-    if (!sel?._id) return;
-    try {
-      const r = await api.get(`/auctions/${sel._id}/players`);
-      setPlayers(r.data.players);
-    } catch {}
-  };
-
-  const fetchTeams = async () => {
-    if (!sel?._id) return;
-    try {
-      const r = await api.get(`/auctions/${sel._id}/teams`);
-      setTeams(r.data.teams);
-    } catch {}
-  };
-
+  // ✅ LOAD AUCTIONS
   useEffect(() => {
-    if (sel) {
-      fetchPlayers();
-      fetchTeams();
-    }
-  }, [sel?._id]);
+    const fetch = async () => {
+      try {
+        const r = await api.get('/auctions/my');
+        console.log("AUCTIONS:", r.data);
+
+        setAuctions(r.data.auctions || []);
+        if (r.data.auctions?.length) setSel(r.data.auctions[0]);
+      } catch (e) {
+        console.log("ERROR:", e);
+      }
+    };
+
+    fetch();
+  }, []);
+
+  // ✅ LOAD PLAYERS + TEAMS
+  useEffect(() => {
+    if (!sel?._id) return;
+
+    const load = async () => {
+      try {
+        const p = await api.get(`/auctions/${sel._id}/players`);
+        const t = await api.get(`/auctions/${sel._id}/teams`);
+
+        setPlayers(p.data.players || []);
+        setTeams(t.data.teams || []);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    load();
+  }, [sel]);
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-black text-white p-6">
 
-      {/* Background */}
-      <div className="fixed inset-0" style={{
-        backgroundImage: "url('/bg-organizer.png')",
-        backgroundSize: "cover"
-      }}/>
+      <h1 className="text-2xl mb-4">Organizer Dashboard</h1>
 
-      {/* Header */}
-      <div className="sticky top-0 z-20 backdrop-blur-sm bg-black/70">
-        <div className="max-w-7xl mx-auto px-7 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-white">Organizer Dashboard</h1>
-
-          <button
-            onClick={() => {
-              localStorage.removeItem('bca_token');
-              localStorage.removeItem('role');
-              window.location.href = '/login';
-            }}
-            className="text-red-400"
+      {/* Auctions */}
+      <h2 className="mb-2">My Auctions</h2>
+      <div className="grid grid-cols-3 gap-4">
+        {auctions.map(a => (
+          <div
+            key={a._id}
+            onClick={() => setSel(a)}
+            className="bg-gray-800 p-4 rounded cursor-pointer"
           >
-            Logout
-          </button>
-        </div>
+            <h3>{a.name}</h3>
+            <p>{format(new Date(a.date), 'dd MMM yyyy')}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-7 py-6">
+      {/* Players */}
+      {sel && (
+        <>
+          <h2 className="mt-6">Players</h2>
+          <div className="grid grid-cols-4 gap-3">
+            {players.map(p => (
+              <div key={p._id} className="bg-gray-800 p-2 rounded">
+                {p.name}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
-        {/* Auctions */}
-        <h2 className="text-xl mb-4 text-white">My Auctions</h2>
+      {/* Teams */}
+      {sel && (
+        <>
+          <h2 className="mt-6">Teams</h2>
+          <div className="grid grid-cols-4 gap-3">
+            {teams.map(t => (
+              <div key={t._id} className="bg-gray-800 p-2 rounded">
+                {t.name}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
-        <div className="grid grid-cols-3 gap-4">
-          {auctions.map(a => (
-            <div key={a._id}
-              onClick={() => setSel(a)}
-              className="bg-black/60 p-4 rounded cursor-pointer"
-            >
-              <h3 className="text-white">{a.name}</h3>
-              <p className="text-gray-400 text-sm">
-                {format(new Date(a.date), 'dd MMM yyyy')}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Players */}
-        {sel && (
-          <>
-            <h2 className="text-xl mt-6 text-white">Players</h2>
-            <div className="grid grid-cols-4 gap-3">
-              {players.map(p => (
-                <div key={p._id} className="bg-black/60 p-3 rounded">
-                  <p className="text-white">{p.name}</p>
-                  <p className="text-xs text-gray-400">{p.role}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Teams */}
-        {sel && (
-          <>
-            <h2 className="text-xl mt-6 text-white">Teams</h2>
-            <div className="grid grid-cols-4 gap-3">
-              {teams.map(t => (
-                <div key={t._id} className="bg-black/60 p-3 rounded">
-                  <p className="text-white">{t.name}</p>
-                  <p className="text-xs text-gray-400">{t.ownerName}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-      </div>
     </div>
   );
 }
