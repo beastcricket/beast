@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Token storage key
 const TOKEN_KEY = 'bca_token';
 
 export const saveToken = (t: string) => {
@@ -15,14 +14,13 @@ export const clearToken = () => {
   try { localStorage.removeItem(TOKEN_KEY); } catch {}
 };
 
-// ✅ IMPORTANT: use backend URL (NOT /api)
+// ✅ USE NEXT.JS REWRITE
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,  // 🔥 FIXED
+  baseURL: '/api',   // 🔥 FIXED
   withCredentials: true,
   timeout: 30000,
 });
 
-// ── Request: attach token + fix Content-Type ─────
 api.interceptors.request.use((config) => {
   const token = getToken();
 
@@ -39,7 +37,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Response: redirect on 401 ─────
 api.interceptors.response.use(
   (res) => res,
   (err) => {
