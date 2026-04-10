@@ -14,18 +14,17 @@ export default function OrganizerDashboard() {
   const [players, setPlayers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
 
-  // ✅ AUTH HANDLING
-  if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
-  }
-
-  if (!user) {
-    window.location.href = '/login';
-    return null;
-  }
+  // ✅ FIX: handle redirect safely
+  useEffect(() => {
+    if (!loading && !user) {
+      window.location.href = '/login';
+    }
+  }, [user, loading]);
 
   // ✅ FETCH AUCTIONS
   useEffect(() => {
+    if (!user) return;
+
     const fetchAuctions = async () => {
       try {
         const res = await api.get('/auctions/my');
@@ -45,7 +44,7 @@ export default function OrganizerDashboard() {
     };
 
     fetchAuctions();
-  }, []);
+  }, [user]);
 
   // ✅ FETCH PLAYERS + TEAMS
   useEffect(() => {
@@ -66,6 +65,11 @@ export default function OrganizerDashboard() {
 
     fetchData();
   }, [sel]);
+
+  // ✅ SAFE RENDER
+  if (loading || !user) {
+    return <div className="text-white p-10">Loading dashboard...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
