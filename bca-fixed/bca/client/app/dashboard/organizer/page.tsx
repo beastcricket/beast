@@ -14,7 +14,7 @@ export default function OrganizerDashboard() {
   const [players, setPlayers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
 
-  // ✅ FIX: handle redirect safely
+  // ✅ SAFE REDIRECT
   useEffect(() => {
     if (!loading && !user) {
       window.location.href = '/login';
@@ -66,7 +66,7 @@ export default function OrganizerDashboard() {
     fetchData();
   }, [sel]);
 
-  // ✅ SAFE RENDER
+  // ✅ LOADING STATE
   if (loading || !user) {
     return <div className="text-white p-10">Loading dashboard...</div>;
   }
@@ -81,20 +81,34 @@ export default function OrganizerDashboard() {
       {/* AUCTIONS */}
       <h2 className="mb-3 text-lg">My Auctions</h2>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {auctions.map(a => (
-          <div
-            key={a._id}
-            onClick={() => setSel(a)}
-            className="bg-gray-800 p-4 rounded cursor-pointer hover:bg-gray-700"
+      {/* 🔥 EMPTY STATE FIX */}
+      {auctions.length === 0 ? (
+        <div className="bg-gray-800 p-6 rounded text-center mb-6">
+          <p className="mb-4 text-gray-300">No auctions found</p>
+
+          <button
+            className="bg-blue-500 px-5 py-2 rounded hover:bg-blue-600"
+            onClick={() => alert("Create Auction feature")}
           >
-            <h3 className="font-semibold">{a.name}</h3>
-            <p className="text-sm text-gray-400">
-              {format(new Date(a.date), 'dd MMM yyyy')}
-            </p>
-          </div>
-        ))}
-      </div>
+            + Create Auction
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {auctions.map(a => (
+            <div
+              key={a._id}
+              onClick={() => setSel(a)}
+              className="bg-gray-800 p-4 rounded cursor-pointer hover:bg-gray-700"
+            >
+              <h3 className="font-semibold">{a.name}</h3>
+              <p className="text-sm text-gray-400">
+                {format(new Date(a.date), 'dd MMM yyyy')}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* PLAYERS */}
       {sel && (
