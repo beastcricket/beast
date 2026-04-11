@@ -919,11 +919,6 @@ export default function TeamOwnerDashboard() {
                   </div>
                   
                   <div className="bg-glass-premium rounded-3xl p-8" style={{border:'1px solid rgba(245,158,11,0.18)'}}>
-                    {/* Debug Info */}
-                    <div className="mb-4 p-2 bg-blue-500/10 rounded text-xs">
-                      Debug: Players count = {auctionDetails.players?.length || 0}
-                    </div>
-                    
                     {/* Auction Header */}
                     <div className="flex items-start justify-between mb-8">
                       <div>

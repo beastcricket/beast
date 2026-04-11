@@ -57,7 +57,7 @@ export default function LoginPage() {
       const pathMap = {
         organizer:'/dashboard/organizer',
         team_owner:'/dashboard/team-owner',
-        viewer:'/auctions'
+        viewer:'/dashboard/viewer'
       };
 
       window.location.href = pathMap[actualRole] || '/auctions';

@@ -95,5 +95,5 @@ export const getRoleRedirect = (role: string|null): string =>
     admin: '/dashboard/admin',
     organizer: '/dashboard/organizer',
     team_owner: '/dashboard/team-owner',
-    viewer: '/auctions'
+    viewer: '/dashboard/viewer'
   }[role || ''] || '/auctions');

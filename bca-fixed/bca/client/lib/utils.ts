@@ -10,7 +10,7 @@ export const fmt = (n?: number): string => {
 };
 
 export const getRoleRedirect = (role: string): string =>
-  ({ admin:'/bca-admin-x7k2', organizer:'/dashboard/organizer', team_owner:'/dashboard/team-owner' }[role] || '/auctions');
+  ({ admin:'/bca-admin-x7k2', organizer:'/dashboard/organizer', team_owner:'/dashboard/team-owner', viewer:'/dashboard/viewer' }[role] || '/auctions');
 
 export const roleColors: Record<string,string> = {
   Batsman:     'border-blue-500/30   bg-blue-500/10   text-blue-400',
