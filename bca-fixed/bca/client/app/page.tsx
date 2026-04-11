@@ -1,85 +1,83 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
-import Link from 'next/link';
+import { format } from 'date-fns';
 
-export default function HomePage() {
+export default function OrganizerDashboard() {
 
   const { user, loading } = useAuth();
 
-  if (loading) {
+  const [auctions, setAuctions] = useState<any[]>([]);
+  const [sel, setSel] = useState<any>(null);
+
+  // ✅ redirect safely
+  useEffect(() => {
+    if (!loading && !user) {
+      window.location.href = '/login';
+    }
+  }, [user, loading]);
+
+  // ✅ fetch auctions
+  useEffect(() => {
+    if (!user) return;
+
+    const load = async () => {
+      try {
+        const res = await api.get('/auctions/my');
+        console.log("AUCTIONS:", res.data);
+
+        const list = res.data?.auctions || [];
+        setAuctions(list);
+
+        if (list.length > 0) setSel(list[0]);
+
+      } catch (err) {
+        console.log("ERROR:", err);
+      }
+    };
+
+    load();
+  }, [user]);
+
+  if (loading || !user) {
     return <div className="text-white p-10">Loading...</div>;
   }
 
-  // ✅ Organizer / Admin
-  if (user?.role === 'organizer' || user?.role === 'admin') {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-
-        <h1 className="text-3xl mb-6">Welcome {user.name}</h1>
-
-        <Link
-          href="/dashboard/organizer"
-          className="bg-yellow-500 px-6 py-3 rounded"
-        >
-          Go to Organizer Dashboard
-        </Link>
-
-      </div>
-    );
-  }
-
-  // ✅ Team Owner
-  if (user?.role === 'team_owner') {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-
-        <h1 className="text-3xl mb-6">Welcome {user.name}</h1>
-
-        <Link
-          href="/dashboard/team-owner"
-          className="bg-blue-500 px-6 py-3 rounded"
-        >
-          Go to Team Dashboard
-        </Link>
-
-      </div>
-    );
-  }
-
-  // ✅ Viewer
-  if (user?.role === 'viewer') {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-
-        <h1 className="text-3xl mb-6">Welcome Viewer</h1>
-
-        <Link
-          href="/auctions"
-          className="bg-green-500 px-6 py-3 rounded"
-        >
-          View Auctions
-        </Link>
-
-      </div>
-    );
-  }
-
-  // ✅ Public
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-black text-white p-6">
 
-      <h1 className="text-4xl mb-6">Beast Cricket Auction</h1>
+      <h1 className="text-2xl mb-6">Organizer Dashboard</h1>
 
-      <div className="flex gap-4">
-        <Link href="/login" className="bg-yellow-500 px-6 py-3 rounded">
-          Login
-        </Link>
+      {/* EMPTY STATE */}
+      {auctions.length === 0 ? (
+        <div className="bg-gray-800 p-6 rounded text-center">
+          <p className="mb-4">No auctions found</p>
 
-        <Link href="/register" className="bg-blue-500 px-6 py-3 rounded">
-          Register
-        </Link>
-      </div>
+          <button
+            className="bg-blue-500 px-4 py-2 rounded"
+            onClick={() => alert('Create Auction')}
+          >
+            + Create Auction
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-4">
+          {auctions.map(a => (
+            <div
+              key={a._id}
+              onClick={() => setSel(a)}
+              className="bg-gray-800 p-4 rounded cursor-pointer"
+            >
+              <h3>{a.name}</h3>
+              <p className="text-sm text-gray-400">
+                {format(new Date(a.date), 'dd MMM yyyy')}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
     </div>
   );
