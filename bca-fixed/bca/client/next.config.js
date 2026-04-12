@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Standalone output for Railway deployment
+  output: 'standalone',
+
+  // Allow images from any domain (Railway backend + uploads)
   images: {
     remotePatterns: [
       { protocol: 'http',  hostname: 'localhost' },
@@ -7,6 +11,8 @@ const nextConfig = {
       { protocol: 'https', hostname: '**'        },
     ],
   },
+
+  // Proxy /api and /uploads to the Railway backend
   async rewrites() {
     const backend =
       process.env.NEXT_PUBLIC_API_URL ||

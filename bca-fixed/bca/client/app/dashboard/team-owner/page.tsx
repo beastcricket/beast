@@ -11,21 +11,14 @@ import toast from 'react-hot-toast';
 // Activity logging function for admin dashboard
 const logActivityToAdmin = async (type: string, title: string, data?: any) => {
   try {
-    await fetch('http://localhost:3001/api/activity-log', {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+    await fetch(`${apiBase}/api/activity-log`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type,
-        title,
-        userId: data?.userId || 'team_owner',
-        data
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, title, userId: data?.userId || 'team_owner', data })
     });
-    console.log('📢 Activity logged to admin:', title);
-  } catch (error) {
-    console.log('Failed to log activity to admin:', error);
+  } catch {
+    // Non-critical — silently ignore
   }
 };
 
