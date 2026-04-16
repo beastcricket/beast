@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      const res = await api.get('/auth/me');
+      const res = await api.get('/api/auth/me');
 
       console.log("AUTH RESPONSE:", res.data);
 
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = useCallback(async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post('/api/auth/logout');
     } catch {}
 
     clearToken();
