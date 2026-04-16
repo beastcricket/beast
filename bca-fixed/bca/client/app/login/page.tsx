@@ -34,27 +34,26 @@ export default function LoginPage() {
 
   const onSubmit = async (d: F) => {
     if (!selectedRole) { setFormError({ text:'Please select your role first.' }); return; }
-    setFormError(null); setLoading(true);
+    setFormError(null);
+    setLoading(true);
 
     try {
-      const res = await api.post('/auth/login', {
+      // ✅ FIXED HERE
+      const res = await api.post('/api/auth/login', {
         email: d.email.trim().toLowerCase(),
         password: d.password,
         role: selectedRole
       });
 
-      // ✅ 🔥 IMPORTANT FIX (TOKEN + ROLE SAVE)
+      // ✅ SAVE TOKEN + ROLE
       if (res.data.token) {
         saveToken(res.data.token);
         localStorage.setItem('role', res.data.user.role);
       }
 
-      console.log("TOKEN:", res.data.token);
-      console.log("ROLE:", res.data.user.role);
-
       const actualRole = res.data.user?.role || selectedRole;
 
-      const pathMap = {
+      const pathMap: any = {
         organizer:'/dashboard/organizer',
         team_owner:'/dashboard/team-owner',
         viewer:'/auctions'
@@ -80,75 +79,36 @@ export default function LoginPage() {
       <GoldParticles/><FireSparkles/>
 
       <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="flex justify-center mb-5 opacity-0 animate-slide-up" style={{ animationDelay:'0.1s' }}>
+        <div className="flex justify-center mb-5">
           <BeastLogo size={100} glow float3d href="/"/>
         </div>
 
-        {chosen && (
-          <div className="flex justify-center mb-4 opacity-0 animate-slide-up" style={{ animationDelay:'0.15s' }}>
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${chosen.color} border-gold-subtle`}>
-              <span className="text-lg">{chosen.icon}</span>
-              <span className="font-heading text-sm uppercase tracking-[0.15em] text-primary">{chosen.label}</span>
-              <span className="text-muted-foreground text-xs font-display">— {chosen.tagline}</span>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-glass-premium rounded-xl p-7 gold-edge opacity-0 animate-slide-up" style={{ animationDelay:'0.2s' }}>
-          <h2 className="font-heading text-2xl uppercase tracking-wider text-center mb-1 text-foreground">Welcome Back</h2>
-          <p className="text-center text-muted-foreground text-sm mb-5 font-display">Select your role to continue</p>
+        <div className="bg-glass-premium rounded-xl p-7 gold-edge">
+          <h2 className="text-2xl text-center mb-5">Welcome Back</h2>
 
           <div className="grid grid-cols-3 gap-2 mb-5">
             {ROLES.map(r => (
-              <button key={r.id} type="button" onClick={() => { setSelectedRole(r.id); setFormError(null); }}
-                className={`relative rounded-lg p-3 text-center transition-all duration-300 overflow-hidden group ${selectedRole===r.id?'border-gold glow-gold':'border-gold-subtle hover:border-gold'}`}
-                style={{ background:selectedRole===r.id?'linear-gradient(135deg,hsla(45,100%,51%,0.15),hsla(45,100%,51%,0.05))':'hsla(222,30%,16%,0.5)' }}>
-                {selectedRole===r.id && <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ background:'linear-gradient(90deg,transparent,hsla(45,100%,51%,0.7) 50%,transparent)' }}/>}
-                <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">{r.icon}</div>
-                <div className={`font-heading text-[10px] uppercase tracking-wider ${selectedRole===r.id?'text-primary':'text-muted-foreground'}`}>{r.label}</div>
+              <button key={r.id} type="button"
+                onClick={() => setSelectedRole(r.id)}
+                className={`p-3 rounded ${selectedRole===r.id ? 'bg-yellow-500' : 'bg-gray-700'}`}>
+                {r.label}
               </button>
             ))}
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <div>
-              <label className="block text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-1.5">Email Address</label>
-              <input {...register('email',{ required:'Email is required' })} type="email" placeholder="you@email.com" autoComplete="email" className="input-beast"/>
-              {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <input {...register('email')} placeholder="Email" className="input-beast"/>
+            <input {...register('password')} type="password" placeholder="Password" className="input-beast"/>
 
-            <div>
-              <label className="block text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-1.5">Password</label>
-              <input {...register('password',{ required:'Password is required' })} type="password" placeholder="••••••••" autoComplete="current-password" className="input-beast"/>
-              {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
-              <div className="text-right mt-1">
-                <Link href="/forgot-password" className="text-[11px] font-heading text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-            </div>
-
-            <button type="submit" disabled={loading}
-              className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-heading uppercase tracking-wider text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.97] disabled:opacity-40 glow-gold group relative overflow-hidden">
-              <span className="relative z-10">{loading?'Signing In...':(chosen?`${chosen.icon} Sign In as ${chosen.label}`:'Select a Role Above')}</span>
+            <button type="submit" className="w-full bg-primary py-3 rounded">
+              {loading ? 'Signing In...' : 'Login'}
             </button>
 
-            <AnimatePresence>
-              {formError && (
-                <motion.div initial={{ opacity:0,y:-6 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }}
-                  className="rounded-lg p-3.5" style={{ background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.3)' }}>
-                  <p className="text-destructive font-heading text-sm">{formError.text}</p>
-                  {formError.hint && <p className="text-muted-foreground text-xs mt-0.5">{formError.hint}</p>}
-                  {formError.link && <Link href={formError.link.href} className="text-primary text-xs hover:underline mt-1 block">{formError.link.label}</Link>}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {formError && <p className="text-red-500">{formError.text}</p>}
           </form>
 
-          <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-center text-sm text-muted-foreground">
-              No account? <Link href="/register" className="text-primary hover:underline font-medium">Register free</Link>
-            </p>
+          <div className="mt-4 text-center">
+            <Link href="/register">Register</Link>
           </div>
         </div>
       </div>
