@@ -27,16 +27,22 @@ export default function RegisterPage() {
   const onSubmit = async (d: F) => {
     if (!selectedRole) { setError('Please select your role'); return; }
     if (d.password !== d.confirm) { setError('Passwords do not match'); return; }
-    setLoading(true); setError('');
+
+    setLoading(true);
+    setError('');
+
     try {
-      await api.post('/auth/register', {
+      // ✅ FIXED API ROUTE
+      await api.post('/api/auth/register', {
         name:     d.name,
         email:    d.email.trim().toLowerCase(),
         password: d.password,
         role:     selectedRole,
       });
+
       setSuccess(true);
       setTimeout(() => { window.location.href = '/login'; }, 2500);
+
     } catch (e: any) {
       setError(e.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
@@ -97,81 +103,33 @@ export default function RegisterPage() {
                   style={{ background: selectedRole === r.id
                     ? 'linear-gradient(135deg,hsla(45,100%,51%,0.15),hsla(45,100%,51%,0.05))'
                     : 'hsla(222,30%,16%,0.5)' }}>
-                  {selectedRole === r.id && (
-                    <div className="absolute top-0 left-0 right-0 h-[1px]"
-                      style={{ background: 'linear-gradient(90deg,transparent,hsla(45,100%,51%,0.7) 50%,transparent)' }}/>
-                  )}
                   <div className="text-2xl mb-1">{r.icon}</div>
-                  <div className={`font-heading text-[10px] uppercase tracking-wider ${
-                    selectedRole === r.id ? 'text-primary' : 'text-muted-foreground'
-                  }`}>{r.label}</div>
-                  <div className="text-[9px] text-muted-foreground/70 mt-0.5 font-display">{r.desc}</div>
+                  <div className="font-heading text-[10px] uppercase tracking-wider">
+                    {r.label}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground/70 mt-0.5 font-display">
+                    {r.desc}
+                  </div>
                 </button>
               ))}
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <div>
-              <label className="block text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-1.5">
-                Full Name *
-              </label>
-              <input {...register('name', { required: 'Name is required' })}
-                placeholder="Your full name" autoComplete="name" className="input-beast"/>
-              {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <input {...register('name')} placeholder="Name" className="input-beast" />
+            <input {...register('email')} placeholder="Email" className="input-beast" />
+            <input {...register('password')} type="password" placeholder="Password" className="input-beast" />
+            <input {...register('confirm')} type="password" placeholder="Confirm Password" className="input-beast" />
 
-            <div>
-              <label className="block text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-1.5">
-                Email Address *
-              </label>
-              <input {...register('email', { required: 'Email is required' })}
-                type="email" placeholder="you@email.com" autoComplete="email" className="input-beast"/>
-              {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-1.5">
-                Password *
-              </label>
-              <input {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Min 6 characters' } })}
-                type="password" placeholder="••••••••" autoComplete="new-password" className="input-beast"/>
-              {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-heading uppercase tracking-wider text-muted-foreground mb-1.5">
-                Confirm Password *
-              </label>
-              <input {...register('confirm', {
-                required: 'Please confirm your password',
-                validate: v => v === pwd || 'Passwords do not match',
-              })}
-                type="password" placeholder="••••••••" autoComplete="new-password" className="input-beast"/>
-              {errors.confirm && <p className="text-destructive text-xs mt-1">{errors.confirm.message}</p>}
-            </div>
-
-            <button type="submit" disabled={loading}
-              className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-heading uppercase tracking-wider text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.97] disabled:opacity-40 glow-gold">
-              {loading ? 'Creating Account...' : '🏏 Create Account'}
+            <button type="submit" className="w-full py-3 bg-primary rounded">
+              {loading ? 'Creating...' : 'Create Account'}
             </button>
 
-            <AnimatePresence>
-              {error && (
-                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="rounded-lg p-3.5"
-                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
-                  <p className="text-destructive font-heading text-sm">{error}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {error && <p className="text-red-500">{error}</p>}
           </form>
 
-          <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link href="/login" className="text-primary hover:underline font-medium">Sign in</Link>
-            </p>
+          <div className="mt-4 text-center">
+            <Link href="/login">Already have an account? Login</Link>
           </div>
         </div>
       </div>
