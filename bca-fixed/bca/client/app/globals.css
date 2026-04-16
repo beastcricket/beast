@@ -163,24 +163,6 @@
   }
 }
 
-/* Additional utility classes for better visibility */
-.text-white { color: white !important; }
-.bg-black { background-color: black !important; }
-.border-white { border-color: white !important; }
-.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important; }
-.rounded-lg { border-radius: 0.5rem !important; }
-.p-4 { padding: 1rem !important; }
-.m-4 { margin: 1rem !important; }
-.w-full { width: 100% !important; }
-.h-full { height: 100% !important; }
-.flex { display: flex !important; }
-.items-center { align-items: center !important; }
-.justify-center { justify-content: center !important; }
-.text-center { text-align: center !important; }
-.font-bold { font-weight: 700 !important; }
-.uppercase { text-transform: uppercase !important; }
-.tracking-wider { letter-spacing: 0.05em !important; }
-
 /* ── Keyframes ───────────────────────────────────── */
 @keyframes float-particle {
   0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
