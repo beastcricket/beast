@@ -33,12 +33,16 @@ export default function LoginPage() {
   const { register, handleSubmit, formState:{ errors } } = useForm<F>();
 
   const onSubmit = async (d: F) => {
-    if (!selectedRole) { setFormError({ text:'Please select your role first.' }); return; }
+    if (!selectedRole) {
+      setFormError({ text:'Please select your role first.' });
+      return;
+    }
+
     setFormError(null);
     setLoading(true);
 
     try {
-      // ✅ FIXED HERE
+      // ✅ FIXED API ROUTE
       const res = await api.post('/api/auth/login', {
         email: d.email.trim().toLowerCase(),
         password: d.password,
@@ -51,15 +55,16 @@ export default function LoginPage() {
         localStorage.setItem('role', res.data.user.role);
       }
 
-      const actualRole = res.data.user?.role || selectedRole;
+      const actualRole = res.data.user?.role;
 
-      const pathMap: any = {
-        organizer:'/dashboard/organizer',
-        team_owner:'/dashboard/team-owner',
-        viewer:'/auctions'
-      };
-
-      window.location.href = pathMap[actualRole] || '/auctions';
+      // ✅ SAFE REDIRECT (NO LOOP)
+      if (actualRole === 'organizer' || actualRole === 'admin') {
+        window.location.href = '/dashboard/organizer';
+      } else if (actualRole === 'team_owner') {
+        window.location.href = '/dashboard/team-owner';
+      } else {
+        window.location.href = '/auctions';
+      }
 
     } catch (e: any) {
       setFormError(mapError(e.response?.data?.error || ''));
@@ -74,33 +79,64 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage:"url('/stadium-bg.jpg')" }}/>
       <div className="absolute inset-0" style={{ background:'radial-gradient(ellipse at center,transparent 20%,hsl(222 47% 6% / 0.95) 70%)' }}/>
       {[{ left:'10%', rotate:'-12deg' },{ left:'90%', rotate:'12deg' }].map((b,i)=>(
-        <div key={i} className="absolute top-0 pointer-events-none" style={{ left:b.left,width:120,height:'60vh',background:'linear-gradient(180deg,hsla(45,100%,90%,0.8) 0%,transparent 100%)',transform:`rotate(${b.rotate})`,transformOrigin:'top center',filter:'blur(25px)',opacity:0.06 }}/>
+        <div key={i} className="absolute top-0 pointer-events-none"
+          style={{ left:b.left,width:120,height:'60vh',
+            background:'linear-gradient(180deg,hsla(45,100%,90%,0.8) 0%,transparent 100%)',
+            transform:`rotate(${b.rotate})`,
+            transformOrigin:'top center',
+            filter:'blur(25px)',
+            opacity:0.06 }}/>
       ))}
-      <GoldParticles/><FireSparkles/>
+      <GoldParticles/>
+      <FireSparkles/>
 
       <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="flex justify-center mb-5">
+        <div className="flex justify-center mb-5 opacity-0 animate-slide-up">
           <BeastLogo size={100} glow float3d href="/"/>
         </div>
 
-        <div className="bg-glass-premium rounded-xl p-7 gold-edge">
-          <h2 className="text-2xl text-center mb-5">Welcome Back</h2>
+        {chosen && (
+          <div className="flex justify-center mb-4 opacity-0 animate-slide-up">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${chosen.color} border-gold-subtle`}>
+              <span className="text-lg">{chosen.icon}</span>
+              <span className="font-heading text-sm uppercase tracking-[0.15em] text-primary">{chosen.label}</span>
+              <span className="text-muted-foreground text-xs font-display">— {chosen.tagline}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-glass-premium rounded-xl p-7 gold-edge opacity-0 animate-slide-up">
+          <h2 className="font-heading text-2xl uppercase tracking-wider text-center mb-1 text-foreground">
+            Welcome Back
+          </h2>
+
+          <p className="text-center text-muted-foreground text-sm mb-5 font-display">
+            Select your role to continue
+          </p>
 
           <div className="grid grid-cols-3 gap-2 mb-5">
             {ROLES.map(r => (
-              <button key={r.id} type="button"
-                onClick={() => setSelectedRole(r.id)}
-                className={`p-3 rounded ${selectedRole===r.id ? 'bg-yellow-500' : 'bg-gray-700'}`}>
-                {r.label}
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => { setSelectedRole(r.id); setFormError(null); }}
+                className={`relative rounded-lg p-3 text-center transition-all duration-300 ${
+                  selectedRole===r.id ? 'border-gold glow-gold' : 'border-gold-subtle'
+                }`}
+              >
+                <div className="text-2xl mb-1">{r.icon}</div>
+                <div className="font-heading text-[10px] uppercase tracking-wider">
+                  {r.label}
+                </div>
               </button>
             ))}
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <input {...register('email')} placeholder="Email" className="input-beast"/>
+            <input {...register('email')} type="email" placeholder="Email" className="input-beast"/>
             <input {...register('password')} type="password" placeholder="Password" className="input-beast"/>
 
-            <button type="submit" className="w-full bg-primary py-3 rounded">
+            <button type="submit" className="w-full py-3 bg-primary rounded">
               {loading ? 'Signing In...' : 'Login'}
             </button>
 
