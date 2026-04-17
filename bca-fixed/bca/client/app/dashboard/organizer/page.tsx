@@ -315,7 +315,7 @@ export default function OrganizerDashboard() {
               <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-display font-semibold text-muted-foreground hover:bg-secondary/40 hover:text-foreground transition-all">
                 <span>👤</span><span>Profile</span>
               </Link>
-              <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-display font-semibold text-muted-foreground hover:bg-secondary/40 hover:text-foreground transition-all">
+              <Link href="/dashboard/organizer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-display font-semibold text-muted-foreground hover:bg-secondary/40 hover:text-foreground transition-all">
                 <span>🏠</span><span>Home</span>
               </Link>
             </div>
@@ -324,8 +324,8 @@ export default function OrganizerDashboard() {
 
         {/* MAIN CONTENT */}
         <div className="flex-1 overflow-auto relative">
-          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage:"url('/bg-organizer.png')", backgroundSize:'cover', backgroundPosition:'center', opacity:0.07 }}/>
-          <div className="absolute inset-0 pointer-events-none" style={{ background:'linear-gradient(180deg,hsl(222 47% 6%/0.6) 0%,hsl(222 47% 5%/0.85) 100%)' }}/>
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage:"url('/bg-organizer.png')", backgroundSize:'cover', backgroundPosition:'center', opacity:0.18 }}/>
+          <div className="absolute inset-0 pointer-events-none" style={{ background:'linear-gradient(180deg,hsl(222 47% 6% / 0.55) 0%,hsl(222 47% 5% / 0.75) 100%)' }}/>
           <div className="relative p-7">
 
             {/* MY AUCTIONS */}

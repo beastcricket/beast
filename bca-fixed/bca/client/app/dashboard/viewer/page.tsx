@@ -74,12 +74,16 @@ export default function ViewerDashboard() {
 
   return (
     <AuthGuard roles={['viewer', 'organizer', 'admin', 'team_owner']}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+
+        {/* Viewer bg image */}
+        <div style={{position:'fixed',inset:0,backgroundImage:"url('/bg-viewer.png'),url('/stadium-bg.png')",backgroundSize:'cover',backgroundPosition:'center',opacity:0.18,pointerEvents:'none',zIndex:0}}/>
+        <div style={{position:'fixed',inset:0,background:'linear-gradient(180deg,hsl(222 47% 6% / 0.55) 0%,hsl(222 47% 5% / 0.75) 100%)',pointerEvents:'none',zIndex:0}}/>
 
         {/* NAV */}
         <div className="bg-glass-navy sticky top-0 z-30 border-b border-border/30">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5">
+            <Link href="/dashboard/viewer" className="flex items-center gap-2.5">
               <img src="/beast-logo.png" alt="Beast Cricket" className="w-9 h-9 rounded-xl object-cover"/>
               <span className="font-heading text-base uppercase tracking-[0.15em] text-gradient-gold hidden sm:block">Beast Cricket</span>
             </Link>
@@ -91,13 +95,14 @@ export default function ViewerDashboard() {
                 {connected ? 'LIVE' : 'OFFLINE'}
               </div>
               <span className="text-muted-foreground text-xs hidden sm:block font-display">{user?.name}</span>
+              <Link href="/dashboard/viewer" className="px-3 py-2 rounded-lg text-xs font-heading uppercase tracking-wider text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all border border-border/40">🏠 Home</Link>
               <Link href="/profile" className="px-3 py-2 rounded-lg text-xs font-heading uppercase tracking-wider text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all border border-border/40">👤</Link>
               <button onClick={logout} className="px-3 py-2 rounded-lg text-xs font-heading uppercase tracking-wider text-muted-foreground hover:text-red-400 transition-all border border-border/40">↩</button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-6 py-8 relative z-10">
 
           {/* Header */}
           <div className="mb-8">

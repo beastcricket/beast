@@ -504,8 +504,8 @@ export default function TeamOwnerDashboard() {
     <AuthGuard roles={['team_owner']}>
       <div className="min-h-screen relative" style={{background:'hsl(222 47% 6%)'}}>
         {/* Team owner bg image */}
-        <div style={{position:'fixed',inset:0,backgroundImage:"url('/bg-team-owner.png')",backgroundSize:'cover',backgroundPosition:'center top',opacity:0.8,pointerEvents:'none',zIndex:0}}/>
-        <div style={{position:'fixed',inset:0,background:'linear-gradient(180deg,hsl(222 40% 6% / 0.2) 0%,hsl(222 47% 5% / 0.4) 60%,hsl(222 47% 5% / 0.6) 100%)',pointerEvents:'none',zIndex:0}}/>
+        <div style={{position:'fixed',inset:0,backgroundImage:"url('/bg-team-owner.png')",backgroundSize:'cover',backgroundPosition:'center top',opacity:0.35,pointerEvents:'none',zIndex:0}}/>
+        <div style={{position:'fixed',inset:0,background:'linear-gradient(180deg,hsl(222 40% 6% / 0.45) 0%,hsl(222 47% 5% / 0.6) 60%,hsl(222 47% 5% / 0.75) 100%)',pointerEvents:'none',zIndex:0}}/>
         {/* NAV */}
         <div className="bg-glass-navy sticky top-0 z-30" style={{borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -526,7 +526,7 @@ export default function TeamOwnerDashboard() {
                 <span className="text-white text-xs font-semibold" style={{textShadow:'0 0 8px rgba(0,0,0,0.9)', fontWeight:'700'}}>{user?.name}</span>
               </div>
               <a href="/profile" className="text-white hover:text-white text-xs font-bold px-3 py-2 glass border border-border rounded-lg transition-all" style={{textShadow:'0 0 8px rgba(0,0,0,0.9)', fontWeight:'700'}}>👤 Profile</a>
-              <button onClick={() => window.location.href = '/'} className="px-3 py-2 rounded-lg text-xs font-heading uppercase tracking-wider text-white hover:text-primary hover:bg-primary/10 transition-all border border-border/40 mr-1" style={{textShadow:'0 0 8px rgba(0,0,0,0.9)', fontWeight:'700'}}>← Home</button>
+              <button onClick={() => window.location.href = '/dashboard/team-owner'} className="px-3 py-2 rounded-lg text-xs font-heading uppercase tracking-wider text-white hover:text-primary hover:bg-primary/10 transition-all border border-border/40 mr-1" style={{textShadow:'0 0 8px rgba(0,0,0,0.9)', fontWeight:'700'}}>← Home</button>
           <button onClick={logout} className="text-white hover:text-red-400 text-xs transition-colors" style={{textShadow:'0 0 8px rgba(0,0,0,0.9)', fontWeight:'700'}}>↩</button>
             </div>
           </div>
