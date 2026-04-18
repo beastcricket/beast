@@ -15,8 +15,11 @@ export const clearToken = () => {
 };
 
 // ✅ FIXED: Use environment variable directly, not Next.js rewrite
+// baseURL includes /api so all route paths are relative (e.g. '/auctions/my')
+const BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+  baseURL: `${BASE}/api`,
   withCredentials: true,  // ✅ Changed to true for cookies
   timeout: 30000,
 });
@@ -31,6 +34,8 @@ api.interceptors.request.use((config) => {
   } else if (!config.headers['Content-Type']) {
     config.headers['Content-Type'] = 'application/json';
   }
+  // Debug: log every outgoing request URL
+  console.log(`🌐 API ${config.method?.toUpperCase()} → ${config.baseURL}${config.url}`, token ? '🔑 token present' : '🔓 no token');
   return config;
 });
 
