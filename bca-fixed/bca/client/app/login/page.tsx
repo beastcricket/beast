@@ -43,7 +43,7 @@ export default function LoginPage() {
 
     try {
       // ✅ FIXED API ROUTE
-      const res = await api.post('/api/auth/login', {
+      const res = await api.post('/auth/login', {
         email: d.email.trim().toLowerCase(),
         password: d.password,
         role: selectedRole

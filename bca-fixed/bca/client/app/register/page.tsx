@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
     try {
       // ✅ FIXED API ROUTE
-      await api.post('/api/auth/register', {
+      await api.post('/auth/register', {
         name:     d.name,
         email:    d.email.trim().toLowerCase(),
         password: d.password,

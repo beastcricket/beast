@@ -34,7 +34,8 @@ export default function OrganizerDashboard() {
 
   useEffect(() => {
     console.log('🔍 Debug Info:');
-    console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log('Effective API baseURL:', (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/+$/, '') + '/api');
     console.log('Socket URL:', process.env.NEXT_PUBLIC_SOCKET_URL);
     console.log('Current pathname:', window.location.pathname);
   }, []);
@@ -252,7 +253,7 @@ export default function OrganizerDashboard() {
             <div className="font-bold text-red-400 mb-2">⚠️ API Error</div>
             <div className="text-sm text-white">{fetchError}</div>
             <div className="text-xs text-gray-300 mt-2">
-              API URL: {process.env.NEXT_PUBLIC_API_URL || 'NOT SET'}
+              API URL: {process.env.NEXT_PUBLIC_API_URL || 'NOT SET (using localhost:5000)'} → calling /api/auctions/my
             </div>
             <button 
               onClick={() => {setFetchError(''); fetchAuctions();}}
