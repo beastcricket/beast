@@ -16,12 +16,12 @@ const ROLES = [
   { id:'viewer',     icon:'👁️', label:'Viewer',     color:'from-emerald-500/30 to-green-600/10',tagline:'Live Arena Access' },
 ];
 
-function mapError(msg: string) {
+function mapError(msg: string, data?: any) {
   if (msg.includes('No account') || msg.includes('not found'))
     return { text:'No account with this email.', hint:'Check spelling or register first.', link:{ label:'Register →', href:'/register' } };
-  if (msg.includes('not verified') || msg.includes('verify'))
-    return { text:'Email not verified.', hint:'Check your inbox for the link.' };
-  if (msg.includes('Incorrect') || msg.includes('password'))
+  if (data?.notVerified || msg.includes('not verified') || msg.includes('verify'))
+    return { text:'Email not verified.', hint:'Check your inbox and click the verification link.', link:{ label:'Resend verification →', href:'/register' } };
+  if (msg.includes('Incorrect') || msg.includes('password') || msg.includes('Wrong'))
     return { text:'Wrong password.', hint:'Check caps lock or reset below.', link:{ label:'Forgot password →', href:'/forgot-password' } };
   return { text: msg || 'Login failed.', hint:'' };
 }
@@ -67,7 +67,7 @@ export default function LoginPage() {
       }
 
     } catch (e: any) {
-      setFormError(mapError(e.response?.data?.error || ''));
+      setFormError(mapError(e.response?.data?.error || '', e.response?.data));
       setLoading(false);
     }
   };
@@ -140,7 +140,17 @@ export default function LoginPage() {
               {loading ? 'Signing In...' : 'Login'}
             </button>
 
-            {formError && <p className="text-red-500">{formError.text}</p>}
+            {formError && (
+              <div className="text-destructive text-xs font-heading bg-destructive/10 rounded-lg px-3 py-2 space-y-1">
+                <p>{formError.text}</p>
+                {formError.hint && <p className="text-muted-foreground font-display">{formError.hint}</p>}
+                {formError.link && (
+                  <Link href={formError.link.href} className="text-primary underline font-heading">
+                    {formError.link.label}
+                  </Link>
+                )}
+              </div>
+            )}
           </form>
 
           <div className="mt-4 text-center">
