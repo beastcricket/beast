@@ -63,7 +63,8 @@ const wrap = (title, body) => `
 
 /* Verification email */
 const sendVerificationEmail = async (email, name, token) => {
-  const url = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+  const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
+  const url = `${baseUrl}/verify-email?token=${token}`;
 
   const body = `
     <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 16px;">
@@ -97,7 +98,8 @@ const sendVerificationEmail = async (email, name, token) => {
 
 /* Password reset email */
 const sendPasswordResetEmail = async (email, name, token) => {
-  const url = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+  const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
+  const url = `${baseUrl}/reset-password?token=${token}`;
 
   const body = `
     <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 16px;">
