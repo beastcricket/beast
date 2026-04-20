@@ -30,7 +30,9 @@ export default function OrganizerDashboard() {
   const [pForm, setPForm] = useState({ name:'', role:'Batsman', category:'Gold', nationality:'Indian', age:'', basePrice:'1000000', matches:'0', runs:'0', wickets:'0', average:'0', strikeRate:'0', economy:'0' });
   const [tForm, setTForm] = useState({ name:'', shortName:'', ownerName:'', city:'', primaryColor:'#f59e0b', maxPlayers:'15' });
   const [pImg, setPImg] = useState<File|null>(null);
+  const [pImgPreview, setPImgPreview] = useState<string>('');
   const [tLogo, setTLogo] = useState<File|null>(null);
+  const [tLogoPreview, setTLogoPreview] = useState<string>('');
 
   useEffect(() => {
     console.log('🔍 Debug Info:');
@@ -174,6 +176,7 @@ export default function OrganizerDashboard() {
       toast.success('Player added!');
       setPForm({ name:'', role:'Batsman', category:'Gold', nationality:'Indian', age:'', basePrice:'1000000', matches:'0', runs:'0', wickets:'0', average:'0', strikeRate:'0', economy:'0' });
       setPImg(null);
+      setPImgPreview('');
       setShowPF(false);
     } catch (e: any) {
       console.error('❌ Add player error:', e);
@@ -214,6 +217,7 @@ export default function OrganizerDashboard() {
       }
       setTForm({ name:'', shortName:'', ownerName:'', city:'', primaryColor:'#f59e0b', maxPlayers:'15' });
       setTLogo(null);
+      setTLogoPreview('');
       setShowTF(false);
     } catch (e: any) {
       console.error('❌ Save team error:', e);
@@ -325,8 +329,8 @@ export default function OrganizerDashboard() {
 
         {/* MAIN CONTENT */}
         <div className="flex-1 overflow-auto relative">
-          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage:"url('/bg-organizer.png')", backgroundSize:'cover', backgroundPosition:'center', opacity:0.18 }}/>
-          <div className="absolute inset-0 pointer-events-none" style={{ background:'linear-gradient(180deg,hsl(222 47% 6% / 0.55) 0%,hsl(222 47% 5% / 0.75) 100%)' }}/>
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage:"url('/bg-organizer.png')", backgroundSize:'cover', backgroundPosition:'center', opacity:0.3 }}/>
+          <div className="absolute inset-0 pointer-events-none" style={{ background:'linear-gradient(180deg,hsl(222 47% 6% / 0.4) 0%,hsl(222 47% 5% / 0.6) 100%)' }}/>
           <div className="relative p-7">
 
             {/* MY AUCTIONS */}
@@ -483,8 +487,23 @@ export default function OrganizerDashboard() {
                             <div><label className={LBL}>Average</label><input type="number" step="0.01" value={pForm.average} onChange={e=>setPForm(p=>({...p,average:e.target.value}))} className={INP}/></div>
                             <div><label className={LBL}>Strike Rate</label><input type="number" step="0.01" value={pForm.strikeRate} onChange={e=>setPForm(p=>({...p,strikeRate:e.target.value}))} className={INP}/></div>
                             <div><label className={LBL}>Photo</label>
-                              <input type="file" accept="image/*" onChange={e=>setPImg(e.target.files?.[0]||null)}
+                              <input type="file" accept="image/*" onChange={e => {
+                                const file = e.target.files?.[0] || null;
+                                setPImg(file);
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = ev => setPImgPreview(ev.target?.result as string);
+                                  reader.readAsDataURL(file);
+                                } else {
+                                  setPImgPreview('');
+                                }
+                              }}
                                 className="w-full text-muted-foreground text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-heading file:text-xs cursor-pointer hover:file:bg-primary/20"/>
+                              {pImgPreview && (
+                                <div className="mt-2 rounded-lg overflow-hidden border border-primary/20" style={{ width: 80, height: 80 }}>
+                                  <img src={pImgPreview} alt="Preview" className="w-full h-full object-cover"/>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <button type="submit" disabled={loading} className="px-7 py-2.5 rounded-lg bg-primary text-primary-foreground font-heading uppercase tracking-wider text-xs glow-gold hover:scale-[1.02] transition-all disabled:opacity-50">
@@ -501,7 +520,8 @@ export default function OrganizerDashboard() {
                     {players.map(p => (
                       <div key={p._id} className="bg-glass-premium rounded-xl overflow-hidden group border-gold-subtle hover:border-gold transition-all">
                         <div className="relative overflow-hidden" style={{ height:144, background:'hsl(222 40% 10%)' }}>
-                          {p.imageUrl ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover object-top"/> : <div className="w-full h-full flex items-center justify-center text-4xl">{roleIcons?.[p.role] || '🏏'}</div>}
+                          {p.imageUrl ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover object-top" onError={e => { e.currentTarget.style.display='none'; (e.currentTarget.nextElementSibling as HTMLElement)?.style.setProperty('display','flex'); }}/> : null}
+                          <div className="w-full h-full flex items-center justify-center text-4xl" style={{ display: p.imageUrl ? 'none' : 'flex' }}>{roleIcons?.[p.role] || '🏏'}</div>
                           <div className="absolute inset-0" style={{ background:'linear-gradient(to top,rgba(0,0,0,0.85),transparent 50%)' }}/>
                           <div className="absolute top-2 right-2">
                             <span className={`text-[9px] px-2 py-0.5 rounded-full font-heading uppercase border ${p.status==='sold'?'border-green-500/40 bg-green-500/20 text-green-400':p.status==='active'?'border-yellow-500/40 bg-yellow-500/20 text-yellow-400':'border-muted bg-muted/20 text-muted-foreground'}`}>{p.status}</span>
@@ -553,7 +573,24 @@ export default function OrganizerDashboard() {
                                 <input value={tForm.primaryColor} onChange={e=>setTForm(p=>({...p,primaryColor:e.target.value}))} className={INP}/>
                               </div>
                             </div>
-                            {!editTeam && <div><label className={LBL}>Logo</label><input type="file" accept="image/*" onChange={e=>setTLogo(e.target.files?.[0]||null)} className="w-full text-muted-foreground text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-heading file:text-xs cursor-pointer"/></div>}
+                            {!editTeam && <div><label className={LBL}>Logo</label>
+                              <input type="file" accept="image/*" onChange={e => {
+                                const file = e.target.files?.[0] || null;
+                                setTLogo(file);
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = ev => setTLogoPreview(ev.target?.result as string);
+                                  reader.readAsDataURL(file);
+                                } else {
+                                  setTLogoPreview('');
+                                }
+                              }} className="w-full text-muted-foreground text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-heading file:text-xs cursor-pointer"/>
+                              {tLogoPreview && (
+                                <div className="mt-2 rounded-lg overflow-hidden border border-primary/20" style={{ width: 64, height: 64 }}>
+                                  <img src={tLogoPreview} alt="Logo preview" className="w-full h-full object-cover"/>
+                                </div>
+                              )}
+                            </div>}
                           </div>
                           <div className="flex gap-3">
                             <button type="submit" disabled={loading} className="px-7 py-2.5 rounded-lg bg-primary text-primary-foreground font-heading uppercase tracking-wider text-xs glow-gold hover:scale-[1.02] transition-all">
@@ -575,8 +612,9 @@ export default function OrganizerDashboard() {
                         <div className="p-5">
                           <div className="flex items-center gap-3 mb-4">
                             {team.logo
-                              ? <img src={team.logo} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0"/>
-                              : <div className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold font-heading flex-shrink-0" style={{ background:`linear-gradient(135deg,${team.primaryColor},${team.primaryColor}88)`, fontSize:18 }}>{team.shortName?.slice(0,2)}</div>}
+                              ? <img src={team.logo} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" onError={e => { e.currentTarget.style.display='none'; (e.currentTarget.nextElementSibling as HTMLElement)?.style.setProperty('display','flex'); }}/>
+                              : null}
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-black font-bold font-heading flex-shrink-0" style={{ background:`linear-gradient(135deg,${team.primaryColor},${team.primaryColor}88)`, fontSize:18, display: team.logo ? 'none' : 'flex' }}>{team.shortName?.slice(0,2)}</div>
                             <div className="flex-1 min-w-0">
                               <div className="text-foreground font-heading text-lg uppercase tracking-wider truncate">{team.name}</div>
                               <div className="text-muted-foreground text-xs font-display">{team.ownerName||'No owner set'}</div>
