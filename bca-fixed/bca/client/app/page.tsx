@@ -60,10 +60,10 @@ export default function HomePage() {
       {/* ── HERO ── */}
       <div className="relative min-h-screen flex flex-col overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0 bg-cover bg-center opacity-20"
+        <div className="absolute inset-0 bg-cover bg-center opacity-30"
           style={{ backgroundImage: "url('/stadium-bg.jpg')" }}/>
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 50% 40%, hsla(222,47%,12%,0.6) 0%, hsl(222 47% 6%) 70%)' }}/>
+          style={{ background: 'radial-gradient(ellipse at 50% 40%, hsla(222,47%,12%,0.4) 0%, hsl(222 47% 6% / 0.85) 70%)' }}/>
         {/* Beam effects */}
         {[{ left: '8%', rotate: '-14deg' }, { left: '92%', rotate: '14deg' }].map((b, i) => (
           <div key={i} className="absolute top-0 pointer-events-none"
