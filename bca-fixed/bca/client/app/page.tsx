@@ -60,7 +60,7 @@ export default function HomePage() {
       {/* ── HERO ── */}
       <div className="relative min-h-screen flex flex-col overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0 bg-cover bg-center opacity-30"
+        <div className="absolute inset-0 bg-cover bg-center opacity-15"
           style={{ backgroundImage: "url('/stadium-bg.jpg')" }}/>
         <div className="absolute inset-0"
           style={{ background: 'radial-gradient(ellipse at 50% 40%, hsla(222,47%,12%,0.4) 0%, hsl(222 47% 6% / 0.85) 70%)' }}/>
