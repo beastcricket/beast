@@ -42,14 +42,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // ✅ FIXED API ROUTE
       const res = await api.post('/auth/login', {
         email: d.email.trim().toLowerCase(),
         password: d.password,
         role: selectedRole
       });
 
-      // ✅ SAVE TOKEN + ROLE
       if (res.data.token) {
         saveToken(res.data.token);
         localStorage.setItem('role', res.data.user.role);
@@ -57,7 +55,6 @@ export default function LoginPage() {
 
       const actualRole = res.data.user?.role;
 
-      // ✅ SAFE REDIRECT (NO LOOP)
       if (actualRole === 'organizer' || actualRole === 'admin') {
         window.location.href = '/dashboard/organizer';
       } else if (actualRole === 'team_owner') {
@@ -135,6 +132,13 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <input {...register('email')} type="email" placeholder="Email" className="input-beast"/>
             <input {...register('password')} type="password" placeholder="Password" className="input-beast"/>
+
+            {/* ✅ ONLY ADDITION */}
+            <div className="text-right -mt-2">
+              <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
 
             <button type="submit" className="w-full py-3 bg-primary rounded">
               {loading ? 'Signing In...' : 'Login'}
