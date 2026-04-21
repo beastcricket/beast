@@ -339,6 +339,44 @@ export default function HomePage() {
             © {new Date().getFullYear()} Beast Cricket Auction.
           </p>
         </div>
+        
+        {/* Social Links */}
+        <div className="max-w-6xl mx-auto flex justify-center items-center gap-6 mt-6 pt-6 border-t border-border/20">
+          <a href="mailto:beastcricketofficialauction@gmail.com" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-110 transition-all"
+             title="Email Us">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </a>
+          
+          <a href="https://www.instagram.com/beastcricketbat/" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-110 transition-all"
+             title="Instagram">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+            </svg>
+          </a>
+          
+          <a href="https://beastcricket.com/" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-110 transition-all"
+             title="Shop Website">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8" cy="21" r="1"/>
+              <circle cx="19" cy="21" r="1"/>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+            </svg>
+          </a>
+        </div>
       </footer>
 
     </div>
