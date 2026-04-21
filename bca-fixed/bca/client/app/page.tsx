@@ -336,7 +336,7 @@ export default function HomePage() {
             <Link href="/register" className="hover:text-primary transition-colors">Register</Link>
           </div>
           <p className="font-display text-muted-foreground text-xs">
-            © {new Date().getFullYear()} Beast Cricket Auction. Powered by Railway.
+            © {new Date().getFullYear()} Beast Cricket Auction.
           </p>
         </div>
       </footer>
