@@ -5,8 +5,20 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/shared/AuthGuard';
 import api from '@/lib/api';
+import { getSocket } from '@/lib/socket';
 import { fmt, roleIcons, roleColors } from '@/lib/utils';
 import toast from 'react-hot-toast';
+
+// Returns true if the color is light enough to need dark (black) text
+const isLightColor = (color: string): boolean => {
+  const hex = color.replace('#', '');
+  if (hex.length < 6) return false;
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 155;
+};
 
 // Activity logging function for admin dashboard
 const logActivityToAdmin = async (type: string, title: string, data?: any) => {
@@ -49,6 +61,35 @@ export default function TeamOwnerDashboard() {
   const COLOR_PRESETS = ['#dc2626','#2563eb','#16a34a','#9333ea','#ea580c','#0891b2','#be185d','#ca8a04','#65a30d','#7c3aed'];
 
   useEffect(()=>{ bootstrap(); },[]);
+
+  // Real-time: listen for playerSold events and update purse + squad instantly
+  useEffect(() => {
+    if (!selTeam?.auction?._id) return;
+
+    const socket = getSocket();
+    socket.emit('joinAuction', { auctionId: selTeam.auction._id });
+
+    const handlePlayerSold = (data: any) => {
+      if (data.soldTo === selTeam._id) {
+        setSelTeam((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            purse: prev.purse - data.soldPrice,
+            players: [...(prev.players || []), data.player],
+          };
+        });
+        setSquad((prev: any[]) => [...prev, data.player]);
+        toast.success(`✅ ${data.player?.name || 'Player'} added to your squad!`);
+      }
+    };
+
+    socket.on('playerSold', handlePlayerSold);
+
+    return () => {
+      socket.off('playerSold', handlePlayerSold);
+    };
+  }, [selTeam?.auction?._id, selTeam?._id]);
 
   const bootstrap = async () => {
     try {
@@ -791,12 +832,17 @@ export default function TeamOwnerDashboard() {
                       {/* Actions */}
                       <div className="flex gap-3">
                         <Link href={`/auctions/${team.auction?._id}`}
-                          className={`flex-1 py-3.5 rounded-xl font-bold text-sm text-center transition-all ${
+                          className={`flex-1 py-3.5 rounded-xl font-bold text-sm text-center transition-all hover:opacity-90 ${
                             team.auction?.status==='active'
-                              ? 'text-black hover:opacity-90'
-                              : 'border border-primary/40 text-primary font-heading uppercase tracking-wider hover:bg-primary/10 transition-all'
+                              ? ''
+                              : 'border border-primary/40 font-heading uppercase tracking-wider hover:bg-primary/10 transition-all'
                           }`}
-                          style={team.auction?.status==='active'?{background:`linear-gradient(135deg,${team.primaryColor},${team.primaryColor}cc)`}:{borderColor:team.primaryColor,color:team.primaryColor}}
+                          style={team.auction?.status==='active'
+                            ? {
+                                background:`linear-gradient(135deg,${team.primaryColor},${team.primaryColor}cc)`,
+                                color: isLightColor(team.primaryColor || '#000000') ? '#000000' : '#ffffff'
+                              }
+                            : {borderColor:team.primaryColor,color:team.primaryColor}}
                         >
                           {team.auction?.status==='active' ? '🔴 BID LIVE NOW' : '👁 View Auction'}
                         </Link>
@@ -1047,24 +1093,94 @@ export default function TeamOwnerDashboard() {
           {/* ── SQUAD ── */}
           {view==='squad' && selTeam && (
             <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}>
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-4 mb-6">
                 <button onClick={()=>setView('my-teams')} className="flex items-center gap-2 text-foreground hover:text-foreground transition-all group">
                   <span className="w-8 h-8 rounded-lg glass border border-border flex items-center justify-center group-hover:border-primary/40 group-hover:bg-gold/5 transition-all">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </span>
                   <span className="text-sm font-bold hidden sm:block">BACK</span>
                 </button>
+                {/* Team logo */}
+                <div className="flex-shrink-0">
+                  {selTeam.logo ? (
+                    <img
+                      src={selTeam.logo}
+                      alt="Team Logo"
+                      className="w-12 h-12 rounded-lg object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        if (sib) sib.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="w-12 h-12 rounded-lg items-center justify-center font-bold text-sm"
+                    style={{
+                      background: `linear-gradient(135deg, ${selTeam.primaryColor}, ${selTeam.primaryColor}88)`,
+                      color: isLightColor(selTeam.primaryColor || '#000000') ? '#000000' : '#ffffff',
+                      display: selTeam.logo ? 'none' : 'flex',
+                      fontFamily: 'Oswald,sans-serif',
+                    }}
+                  >
+                    {selTeam.shortName?.slice(0, 2).toUpperCase()}
+                  </div>
+                </div>
                 <div className="flex-1">
                   <h2 className="text-foreground" style={{fontFamily:'Oswald,sans-serif',fontSize:'44px'}}>{selTeam.name} <span className="text-gradient-gold">SQUAD</span></h2>
-                  <p className="text-foreground text-sm">{squad.length} players acquired</p>
+                  <p className="text-foreground text-sm">{squad.length} players · {selTeam.playersCount || squad.length}/{selTeam.maxPlayers || '—'} slots filled</p>
                 </div>
                 {selTeam.auction?.status==='active' && (
-                  <Link href={`/auctions/${selTeam.auction?._id}`} className="bg-primary text-primary-foreground font-heading uppercase tracking-wider glow-gold hover:scale-[1.02] active:scale-[0.97] transition-all px-6 py-3 rounded-xl text-sm" style={{fontFamily:'Oswald,sans-serif',letterSpacing:'1px'}}>🔴 BID NOW</Link>
+                  <Link
+                    href={`/auctions/${selTeam.auction?._id}`}
+                    className="font-heading uppercase tracking-wider hover:scale-[1.02] active:scale-[0.97] transition-all px-6 py-3 rounded-xl text-sm font-bold"
+                    style={{
+                      fontFamily:'Oswald,sans-serif',
+                      letterSpacing:'1px',
+                      background: selTeam.primaryColor || 'hsl(45,100%,51%)',
+                      color: isLightColor(selTeam.primaryColor || '#000000') ? '#000000' : '#ffffff',
+                      boxShadow: `0 0 20px ${selTeam.primaryColor}60`,
+                    }}
+                  >🔴 BID NOW</Link>
                 )}
                 {selTeam.auction?.status==='completed' && (
                   <Link href={`/auctions/${selTeam.auction?._id}`} className="border border-primary/40 text-primary font-heading uppercase tracking-wider hover:bg-primary/10 transition-all px-6 py-3 rounded-xl text-sm" style={{fontFamily:'Oswald,sans-serif',letterSpacing:'1px'}}>📊 Final Results</Link>
                 )}
               </div>
+
+              {/* Purse display — always visible, updates in real-time */}
+              {selTeam.auction?.status !== 'completed' && (
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-glass-premium rounded-xl p-4" style={{border:'1px solid rgba(245,158,11,0.2)'}}>
+                    <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1" style={{fontFamily:'Oswald,sans-serif'}}>Remaining Purse</div>
+                    <motion.div
+                      key={selTeam.purse}
+                      initial={{scale:0.92,opacity:0.7}}
+                      animate={{scale:1,opacity:1}}
+                      transition={{duration:0.3}}
+                      className="text-2xl font-bold text-gradient-gold"
+                      style={{fontFamily:'Oswald,sans-serif'}}
+                    >
+                      {fmt(selTeam.purse || 0)}
+                    </motion.div>
+                    <div className="text-xs text-muted-foreground mt-1">of {fmt(selTeam.initialPurse || 0)} initial</div>
+                  </div>
+                  <div className="bg-glass-premium rounded-xl p-4" style={{border:'1px solid rgba(255,255,255,0.06)'}}>
+                    <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1" style={{fontFamily:'Oswald,sans-serif'}}>Spent</div>
+                    <motion.div
+                      key={(selTeam.initialPurse || 0) - (selTeam.purse || 0)}
+                      initial={{scale:0.92,opacity:0.7}}
+                      animate={{scale:1,opacity:1}}
+                      transition={{duration:0.3}}
+                      className="text-2xl font-bold text-foreground"
+                      style={{fontFamily:'Oswald,sans-serif'}}
+                    >
+                      {fmt((selTeam.initialPurse || 0) - (selTeam.purse || 0))}
+                    </motion.div>
+                    <div className="text-xs text-muted-foreground mt-1">{squad.length} player{squad.length !== 1 ? 's' : ''} acquired</div>
+                  </div>
+                </div>
+              )}
 
               {/* Auction ended — show full financial summary */}
               {selTeam.auction?.status==='completed' && (
