@@ -1,29 +1,31 @@
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 /* Check whether real email credentials are set */
 const isEmailConfigured = () => {
-  const u = process.env.EMAIL_USER || '';
-  const p = process.env.EMAIL_PASS || '';
-  return (
-    u.length > 0 &&
-    p.length > 0 &&
-    u !== 'your_email@gmail.com' &&
-    p !== 'your_app_password_here'
-  );
+  return !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 };
 
-/* Create transporter */
-const createTransport = () =>
-  nodemailer.createTransport({
-    host:   process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port:   parseInt(process.env.EMAIL_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: { rejectUnauthorized: false }, // avoid cert issues on some hosts
-  });
+/* Singleton transporter */
+const transporter = nodemailer.createTransport({
+  host:   process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port:   parseInt(process.env.EMAIL_PORT || '587'),
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com',
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: { rejectUnauthorized: false }, // avoid cert issues on some hosts
+});
+
+/* Verify transporter connection on startup */
+transporter.verify((error) => {
+  if (error) {
+    console.log('⚠️ Email service not configured:', error.message);
+  } else {
+    console.log('✅ Email service ready');
+  }
+});
 
 /* Branded email HTML wrapper */
 const wrap = (title, body) => `
@@ -88,12 +90,15 @@ const sendVerificationEmail = async (email, name, token) => {
     <p style="color:#475569;font-size:12px;margin:0;">⏱ This link expires in <strong>24 hours</strong>.</p>
   `;
 
-  await createTransport().sendMail({
-    from:    process.env.EMAIL_FROM || `Beast Cricket Auction <${process.env.EMAIL_USER}>`,
+  const result = await transporter.sendMail({
+    from:    process.env.EMAIL_FROM || `"Beast Cricket Auction" <${process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com'}>`,
     to:      email,
     subject: '🏏 Verify Your Email — Beast Cricket Auction',
     html:    wrap('Verify Your Email', body),
   });
+
+  console.log('✅ Verification email sent to:', email);
+  return result;
 };
 
 /* Password reset email */
@@ -122,12 +127,15 @@ const sendPasswordResetEmail = async (email, name, token) => {
     <p style="color:#475569;font-size:12px;margin:0;">⏱ This link expires in <strong>1 hour</strong>.</p>
   `;
 
-  await createTransport().sendMail({
-    from:    process.env.EMAIL_FROM || `Beast Cricket Auction <${process.env.EMAIL_USER}>`,
+  const result = await transporter.sendMail({
+    from:    process.env.EMAIL_FROM || `"Beast Cricket Auction" <${process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com'}>`,
     to:      email,
     subject: '🔐 Reset Your Password — Beast Cricket Auction',
     html:    wrap('Reset Your Password', body),
   });
+
+  console.log('✅ Password reset email sent to:', email);
+  return result;
 };
 
 module.exports = { isEmailConfigured, sendVerificationEmail, sendPasswordResetEmail };
