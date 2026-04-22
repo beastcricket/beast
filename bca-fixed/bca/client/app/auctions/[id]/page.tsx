@@ -76,6 +76,13 @@ export default function LiveAuctionPage() {
     }).catch(()=>{});
   }, [id, user]);
 
+  // Show toast when auction is already completed on load
+  useEffect(() => {
+    if (auction?.status === 'completed') {
+      toast.success('This auction has been completed.');
+    }
+  }, [auction?.status]);
+
   // Socket connection
   useEffect(() => {
     if (!id) return;
@@ -408,11 +415,44 @@ export default function LiveAuctionPage() {
             </div>
           )}
           {auctionStatus==='completed'&&(
-            <div className="text-center px-6 relative z-10">
-              <div style={{fontSize:'72px',marginBottom:'12px'}}>🏆</div>
-              <h2 className="text-gradient-gold" style={{fontFamily:'Oswald,sans-serif',fontSize:'52px'}}>AUCTION COMPLETE!</h2>
-              <p className="text-muted-foreground mt-2 mb-6" style={{fontFamily:'Rajdhani,sans-serif'}}>All players have been auctioned.</p>
-              <Link href="/auctions" className="inline-block px-8 py-3 rounded-xl font-bold text-black transition-all hover:scale-[1.04]" style={{fontFamily:'Oswald,sans-serif',background:'linear-gradient(135deg,hsl(45,100%,51%),hsl(40,100%,38%))'}}>View All Auctions</Link>
+            <div className="relative z-10 w-full max-w-xl px-4">
+              {/* Completion banner — team owner variant */}
+              {isTeamOwner ? (
+                <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:200,damping:22}}
+                  className="rounded-xl p-8 text-center mb-6"
+                  style={{background:'hsla(222,40%,10%,0.95)',border:'1px solid hsla(45,100%,51%,0.35)',boxShadow:'0 0 60px hsla(45,100%,51%,0.12)'}}>
+                  <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:'spring',stiffness:300,damping:18,delay:0.1}} style={{fontSize:'64px',marginBottom:'16px'}}>✅</motion.div>
+                  <h2 style={{fontFamily:'Oswald,sans-serif',fontSize:'42px',letterSpacing:'2px',margin:'0 0 8px'}} className="text-foreground">
+                    Auction <span className="text-gradient-gold">Completed</span>
+                  </h2>
+                  <p className="text-muted-foreground mb-8" style={{fontFamily:'Rajdhani,sans-serif',fontSize:'16px'}}>
+                    All players have been sold. View your final squad and results below.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link
+                      href="/dashboard/team-owner"
+                      className="inline-block px-8 py-3 rounded-lg font-bold text-black transition-all hover:scale-[1.02]"
+                      style={{fontFamily:'Oswald,sans-serif',letterSpacing:'1px',background:'linear-gradient(135deg,hsl(45,100%,51%),hsl(40,100%,38%))',boxShadow:'0 0 30px hsla(45,100%,51%,0.35)'}}
+                    >
+                      View My Results
+                    </Link>
+                    <Link
+                      href="/auctions"
+                      className="inline-block px-8 py-3 rounded-lg font-bold transition-all hover:scale-[1.02]"
+                      style={{fontFamily:'Oswald,sans-serif',letterSpacing:'1px',border:'1px solid hsla(45,100%,51%,0.4)',color:'hsl(45,100%,51%)'}}
+                    >
+                      All Auctions
+                    </Link>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="text-center">
+                  <div style={{fontSize:'72px',marginBottom:'12px'}}>🏆</div>
+                  <h2 className="text-gradient-gold" style={{fontFamily:'Oswald,sans-serif',fontSize:'52px'}}>AUCTION COMPLETE!</h2>
+                  <p className="text-muted-foreground mt-2 mb-6" style={{fontFamily:'Rajdhani,sans-serif'}}>All players have been auctioned.</p>
+                  <Link href="/auctions" className="inline-block px-8 py-3 rounded-xl font-bold text-black transition-all hover:scale-[1.04]" style={{fontFamily:'Oswald,sans-serif',background:'linear-gradient(135deg,hsl(45,100%,51%),hsl(40,100%,38%))'}}>View All Auctions</Link>
+                </div>
+              )}
             </div>
           )}
 
