@@ -53,6 +53,7 @@ export default function TeamOwnerDashboard() {
   // team form
   const [tf, setTf] = useState({ name:'', shortName:'', ownerName:'', city:'', primaryColor:'hsl(45, 100%, 51%)' });
   const [tLogo, setTLogo] = useState<File|null>(null);
+  const [tLogoPreview, setTLogoPreview] = useState<string>('');
   const [editTeam, setEditTeam] = useState<any>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedAuction, setSelectedAuction] = useState<any>(null);
@@ -213,6 +214,8 @@ export default function TeamOwnerDashboard() {
       toast.success('🏆 Team created! You are in the auction.');
       setCode(''); 
       setPreviewAuction(null);
+      setTLogo(null);
+      setTLogoPreview('');
       
       // Log activity to admin
       await logActivityToAdmin('team_join', `Team joined auction: ${r.data.team.name}`, {
@@ -326,6 +329,7 @@ export default function TeamOwnerDashboard() {
       setShowEditForm(false);
       setTf({ name:'', shortName:'', ownerName:'', city:'', primaryColor:'hsl(45, 100%, 51%)' });
       setTLogo(null);
+      setTLogoPreview('');
       
     } catch(e:any) { 
       console.log('Save team error:', e);
@@ -693,8 +697,8 @@ export default function TeamOwnerDashboard() {
                   {/* Live Preview */}
                   <div className="rounded-2xl p-5 mb-8 flex items-center gap-5 transition-all duration-300"
                     style={{background:`${tf.primaryColor}10`,border:`2px solid ${tf.primaryColor}30`}}>
-                    {tLogo
-                      ? <img src={URL.createObjectURL(tLogo)} alt="" className="w-20 h-20 rounded-2xl object-cover flex-shrink-0"/>
+                    {tLogoPreview
+                      ? <img src={tLogoPreview} alt="" className="w-20 h-20 rounded-2xl object-cover flex-shrink-0"/>
                       : <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-black font-bold flex-shrink-0"
                           style={{background:`linear-gradient(135deg,${tf.primaryColor},${tf.primaryColor}88)`,fontFamily:'Oswald,sans-serif',fontSize:'28px'}}>
                           {tf.shortName||'XX'}
@@ -752,9 +756,30 @@ export default function TeamOwnerDashboard() {
 
                     <div>
                       <label className={LBL}>Team Logo (optional)</label>
-                      <input type="file" accept="image/*" onChange={e=>setTLogo(e.target.files?.[0]||null)}
+                      <input type="file" accept="image/*" onChange={e => {
+                        const file = e.target.files?.[0] || null;
+                        setTLogo(file);
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            setTLogoPreview(event.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        } else {
+                          setTLogoPreview('');
+                        }
+                      }}
                         className="w-full text-foreground text-sm file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-gold-500/15 file:text-amber-400 file:font-bold hover:file:bg-amber-500/25 cursor-pointer"
                         style={{'--tw-file-btn-bg':'rgba(245,158,11,0.15)'} as any}/>
+                      {tLogoPreview && (
+                        <div className="mt-3 rounded-lg overflow-hidden border border-primary/20" style={{ width: 80, height: 80 }}>
+                          <img
+                            src={tLogoPreview}
+                            alt="Logo preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <button type="submit" disabled={loading} className="bg-primary text-primary-foreground font-heading uppercase tracking-wider glow-gold hover:scale-[1.02] active:scale-[0.97] transition-all w-full py-5 rounded-xl text-xl" style={{fontFamily:'Oswald,sans-serif',letterSpacing:'2px'}}>
@@ -899,14 +924,29 @@ export default function TeamOwnerDashboard() {
                         </div>
                         <div>
                           <label className={LBL}>Team Logo</label>
-                          <input type="file" accept="image/*" onChange={e=>setTLogo(e.target.files?.[0]||null)} className="w-full text-foreground text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-heading file:text-xs file:uppercase file:tracking-wider cursor-pointer hover:file:bg-primary/20"/>
-                          {tLogo && (
-                            <div className="mt-2">
-                              <img src={URL.createObjectURL(tLogo)} alt="Preview" className="w-16 h-16 rounded-lg object-cover border border-primary/20"/>
-                              <p className="text-xs text-foreground mt-1">New logo preview</p>
+                          <input type="file" accept="image/*" onChange={e => {
+                            const file = e.target.files?.[0] || null;
+                            setTLogo(file);
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                setTLogoPreview(event.target?.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            } else {
+                              setTLogoPreview('');
+                            }
+                          }} className="w-full text-foreground text-xs file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-heading file:text-xs file:uppercase file:tracking-wider cursor-pointer hover:file:bg-primary/20"/>
+                          {tLogoPreview && (
+                            <div className="mt-3 rounded-lg overflow-hidden border border-primary/20" style={{ width: 80, height: 80 }}>
+                              <img
+                                src={tLogoPreview}
+                                alt="Logo preview"
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                           )}
-                          {editTeam?.logo && !tLogo && (
+                          {editTeam?.logo && !tLogoPreview && (
                             <div className="mt-2">
                               <img src={editTeam.logo} alt="Current" className="w-16 h-16 rounded-lg object-cover border border-primary/20"/>
                               <p className="text-xs text-foreground mt-1">Current logo</p>
@@ -1107,6 +1147,7 @@ export default function TeamOwnerDashboard() {
                       src={selTeam.logo}
                       alt="Team Logo"
                       className="w-12 h-12 rounded-lg object-cover"
+                      onLoad={() => { console.log('Team logo loaded:', selTeam.logo); }}
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                         const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
