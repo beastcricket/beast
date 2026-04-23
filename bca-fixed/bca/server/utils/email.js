@@ -1,31 +1,33 @@
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
-/* Check whether real email credentials are set */
+// Check if email credentials are configured
 const isEmailConfigured = () => {
-  const u = process.env.EMAIL_USER || '';
-  const p = process.env.EMAIL_PASS || '';
-  return (
-    u.length > 0 &&
-    p.length > 0 &&
-    u !== 'your_email@gmail.com' &&
-    p !== 'your_app_password_here'
-  );
+  return !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 };
 
-/* Create transporter */
-const createTransport = () =>
-  nodemailer.createTransport({
-    host:   process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port:   parseInt(process.env.EMAIL_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: { rejectUnauthorized: false }, // avoid cert issues on some hosts
-  });
+// Create singleton transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_PORT || '587'),
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com',
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: { rejectUnauthorized: false },
+});
 
-/* Branded email HTML wrapper */
+// Verify transporter connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.log('⚠️ Email service not configured:', error.message);
+  } else {
+    console.log('✅ Email service ready');
+  }
+});
+
+// Branded email HTML wrapper
 const wrap = (title, body) => `
 <!DOCTYPE html>
 <html>
@@ -61,73 +63,89 @@ const wrap = (title, body) => `
 </body>
 </html>`;
 
-/* Verification email */
+// Send verification email
 const sendVerificationEmail = async (email, name, token) => {
-  const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
-  const url = `${baseUrl}/verify-email?token=${token}`;
+  try {
+    const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
+    const url = `${baseUrl}/verify-email?token=${token}`;
 
-  const body = `
-    <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 16px;">
-      Hello <strong style="color:#f59e0b;">${name}</strong>,
-    </p>
-    <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      Welcome to Beast Cricket Auction! Click the button below to verify your email and activate your account.
-    </p>
-    <p style="text-align:center;margin:0 0 24px;">
-      <a href="${url}"
-        style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);
-               color:#000;padding:14px 36px;border-radius:10px;
-               text-decoration:none;font-weight:700;font-size:16px;">
-        ✅ Verify My Email
-      </a>
-    </p>
-    <p style="color:#64748b;font-size:13px;margin:0 0 8px;">
-      If the button doesn't work, copy and paste this link into your browser:
-    </p>
-    <p style="color:#f59e0b;font-size:12px;word-break:break-all;margin:0 0 16px;">${url}</p>
-    <p style="color:#475569;font-size:12px;margin:0;">⏱ This link expires in <strong>24 hours</strong>.</p>
-  `;
+    const body = `
+      <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 16px;">
+        Hello <strong style="color:#f59e0b;">${name}</strong>,
+      </p>
+      <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Welcome to Beast Cricket Auction! Click the button below to verify your email and activate your account.
+      </p>
+      <p style="text-align:center;margin:0 0 24px;">
+        <a href="${url}"
+          style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);
+                 color:#000;padding:14px 36px;border-radius:10px;
+                 text-decoration:none;font-weight:700;font-size:16px;">
+          ✅ Verify My Email
+        </a>
+      </p>
+      <p style="color:#64748b;font-size:13px;margin:0 0 8px;">
+        If the button doesn't work, copy and paste this link into your browser:
+      </p>
+      <p style="color:#f59e0b;font-size:12px;word-break:break-all;margin:0 0 16px;">${url}</p>
+      <p style="color:#475569;font-size:12px;margin:0;">⏱ This link expires in <strong>24 hours</strong>.</p>
+    `;
 
-  await createTransport().sendMail({
-    from:    process.env.EMAIL_FROM || `Beast Cricket Auction <${process.env.EMAIL_USER}>`,
-    to:      email,
-    subject: '🏏 Verify Your Email — Beast Cricket Auction',
-    html:    wrap('Verify Your Email', body),
-  });
+    const result = await transporter.sendMail({
+      from: `"Beast Cricket Auction" <${process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com'}>`,
+      to: email,
+      subject: '🏏 Verify Your Beast Cricket Account',
+      html: wrap('Verify Your Email', body),
+    });
+
+    console.log('✅ Verification email sent to:', email);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send verification email:', error.message);
+    throw error;
+  }
 };
 
-/* Password reset email */
+// Send password reset email
 const sendPasswordResetEmail = async (email, name, token) => {
-  const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
-  const url = `${baseUrl}/reset-password?token=${token}`;
+  try {
+    const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
+    const url = `${baseUrl}/reset-password?token=${token}`;
 
-  const body = `
-    <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 16px;">
-      Hello <strong style="color:#f59e0b;">${name}</strong>,
-    </p>
-    <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      We received a request to reset your password. Click below to create a new one.
-      If you didn't request this, you can safely ignore this email.
-    </p>
-    <p style="text-align:center;margin:0 0 24px;">
-      <a href="${url}"
-        style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);
-               color:#000;padding:14px 36px;border-radius:10px;
-               text-decoration:none;font-weight:700;font-size:16px;">
-        🔐 Reset My Password
-      </a>
-    </p>
-    <p style="color:#64748b;font-size:13px;margin:0 0 8px;">Link not working? Copy and paste:</p>
-    <p style="color:#f59e0b;font-size:12px;word-break:break-all;margin:0 0 16px;">${url}</p>
-    <p style="color:#475569;font-size:12px;margin:0;">⏱ This link expires in <strong>1 hour</strong>.</p>
-  `;
+    const body = `
+      <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 16px;">
+        Hello <strong style="color:#f59e0b;">${name}</strong>,
+      </p>
+      <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        We received a request to reset your password. Click below to create a new one.
+        If you didn't request this, you can safely ignore this email.
+      </p>
+      <p style="text-align:center;margin:0 0 24px;">
+        <a href="${url}"
+          style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);
+                 color:#000;padding:14px 36px;border-radius:10px;
+                 text-decoration:none;font-weight:700;font-size:16px;">
+          🔐 Reset My Password
+        </a>
+      </p>
+      <p style="color:#64748b;font-size:13px;margin:0 0 8px;">Link not working? Copy and paste:</p>
+      <p style="color:#f59e0b;font-size:12px;word-break:break-all;margin:0 0 16px;">${url}</p>
+      <p style="color:#475569;font-size:12px;margin:0;">⏱ This link expires in <strong>1 hour</strong>.</p>
+    `;
 
-  await createTransport().sendMail({
-    from:    process.env.EMAIL_FROM || `Beast Cricket Auction <${process.env.EMAIL_USER}>`,
-    to:      email,
-    subject: '🔐 Reset Your Password — Beast Cricket Auction',
-    html:    wrap('Reset Your Password', body),
-  });
+    const result = await transporter.sendMail({
+      from: `"Beast Cricket Auction" <${process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com'}>`,
+      to: email,
+      subject: '🏏 Reset Your Beast Cricket Password',
+      html: wrap('Reset Your Password', body),
+    });
+
+    console.log('✅ Password reset email sent to:', email);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send password reset email:', error.message);
+    throw error;
+  }
 };
 
 module.exports = { isEmailConfigured, sendVerificationEmail, sendPasswordResetEmail };
