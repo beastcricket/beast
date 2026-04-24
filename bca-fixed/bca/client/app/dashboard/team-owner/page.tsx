@@ -209,8 +209,13 @@ export default function TeamOwnerDashboard() {
     try {
       const fd = new FormData();
       Object.entries(tf).forEach(([k,v])=>fd.append(k,v));
-      if (tLogo) fd.append('logo',tLogo);
+      if (tLogo) {
+        fd.append('logo', tLogo);
+        console.log('📤 Uploading team logo...');
+      }
       const r = await api.post(`/auctions/${previewAuction._id}/teams/self-register`, fd);
+      console.log('✅ Team created successfully');
+      console.log('🎨 Logo URL:', r.data.team.logo);
       toast.success('🏆 Team created! You are in the auction.');
       setCode(''); 
       setPreviewAuction(null);
@@ -230,7 +235,9 @@ export default function TeamOwnerDashboard() {
       
       await bootstrap();
     } catch(e:any){ 
-      toast.error(e.response?.data?.error||'Failed'); 
+      console.error('❌ Create team error:', e);
+      const errorMsg = e.response?.data?.error || 'Failed to create team';
+      toast.error(errorMsg);
     }
     finally { setLoading(false); }
   };
@@ -548,6 +555,15 @@ export default function TeamOwnerDashboard() {
   return (
     <AuthGuard roles={['team_owner']}>
       <div className="min-h-screen relative" style={{background:'hsl(222 47% 6%)'}}>
+        {/* LOADING OVERLAY */}
+        {loading && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+            <div className="bg-glass-premium rounded-xl p-8 text-center">
+              <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto mb-4"></div>
+              <p className="font-heading text-foreground">Uploading...</p>
+            </div>
+          </div>
+        )}
         {/* Team owner bg image */}
         <div style={{position:'fixed',inset:0,backgroundImage:"url('/bg-team-owner.png')",backgroundSize:'cover',backgroundPosition:'center top',opacity:0.35,pointerEvents:'none',zIndex:0}}/>
         <div style={{position:'fixed',inset:0,background:'linear-gradient(180deg,hsl(222 40% 6% / 0.45) 0%,hsl(222 47% 5% / 0.6) 60%,hsl(222 47% 5% / 0.75) 100%)',pointerEvents:'none',zIndex:0}}/>
@@ -1147,8 +1163,11 @@ export default function TeamOwnerDashboard() {
                       src={selTeam.logo}
                       alt="Team Logo"
                       className="w-12 h-12 rounded-lg object-cover"
-                      onLoad={() => { console.log('Team logo loaded:', selTeam.logo); }}
+                      onLoad={() => {
+                        console.log('✅ Team logo loaded:', selTeam.logo);
+                      }}
                       onError={(e) => {
+                        console.error('❌ Team logo failed to load:', selTeam.logo);
                         e.currentTarget.style.display = 'none';
                         const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
                         if (sib) sib.style.display = 'flex';

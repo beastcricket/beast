@@ -173,9 +173,13 @@ export default function OrganizerDashboard() {
     try {
       const fd = new FormData();
       Object.entries(pForm).forEach(([k,v]) => fd.append(k,v));
-      if (pImg) fd.append('image', pImg);
+      if (pImg) {
+        fd.append('image', pImg);
+        console.log('📤 Uploading player image...');
+      }
       const r = await api.post(`/auctions/${sel._id}/players`, fd);
-      console.log('Player added with image URL:', r.data.player.imageUrl);
+      console.log('✅ Player added successfully');
+      console.log('📸 Image URL:', r.data.player.imageUrl);
       setPlayers(p => [...p, r.data.player]);
       toast.success('✅ Player added with photo!');
       setPForm({ name:'', role:'Batsman', category:'Gold', nationality:'Indian', age:'', basePrice:'1000000', matches:'0', runs:'0', wickets:'0', average:'0', strikeRate:'0', economy:'0' });
@@ -215,10 +219,15 @@ export default function OrganizerDashboard() {
       } else {
         const fd = new FormData();
         Object.entries(tForm).forEach(([k,v]) => fd.append(k,v));
-        if (tLogo) fd.append('logo', tLogo);
+        if (tLogo) {
+          fd.append('logo', tLogo);
+          console.log('📤 Uploading team logo...');
+        }
         const r = await api.post(`/auctions/${sel._id}/teams`, fd);
+        console.log('✅ Team created successfully');
+        console.log('🎨 Logo URL:', r.data.team.logo);
         setTeams(p => [...p, r.data.team]);
-        toast.success('Team created!');
+        toast.success('✅ Team created with logo!');
       }
       setTForm({ name:'', shortName:'', ownerName:'', city:'', primaryColor:'#f59e0b', maxPlayers:'15' });
       setTLogo(null);
@@ -255,6 +264,16 @@ export default function OrganizerDashboard() {
   return (
     <AuthGuard roles={['organizer','admin']}>
       <div className="flex h-screen overflow-hidden bg-background">
+
+        {/* LOADING OVERLAY */}
+        {loading && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg">
+            <div className="bg-glass-premium rounded-xl p-8 text-center">
+              <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto mb-4"></div>
+              <p className="font-heading text-foreground">Uploading...</p>
+            </div>
+          </div>
+        )}
 
         {/* ERROR DEBUG BOX */}
         {fetchError && (
