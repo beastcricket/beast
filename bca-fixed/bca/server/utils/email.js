@@ -1,29 +1,32 @@
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
-// Check if email credentials are configured
+// Check if email service is configured
 const isEmailConfigured = () => {
-  return !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  return !!(user && pass && user.length > 0 && pass.length > 0);
 };
 
-// Create singleton transporter
+// Create transporter with Gmail SMTP
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.EMAIL_PORT || '587'),
   secure: false,
   auth: {
     user: process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com',
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASS || 'gdgzafbzoyjmgrxx',
   },
   tls: { rejectUnauthorized: false },
 });
 
-// Verify transporter connection on startup
+// Verify transporter on startup
 transporter.verify((error, success) => {
   if (error) {
-    console.log('⚠️ Email service not configured:', error.message);
+    console.error('❌ Email service verification failed:', error.message);
   } else {
-    console.log('✅ Email service ready');
+    console.log('✅ Email service ready - connected to Gmail SMTP');
+    console.log('📧 Sending emails from:', process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com');
   }
 });
 
@@ -66,6 +69,10 @@ const wrap = (title, body) => `
 // Send verification email
 const sendVerificationEmail = async (email, name, token) => {
   try {
+    if (!isEmailConfigured()) {
+      throw new Error('Email service not configured');
+    }
+
     const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
     const url = `${baseUrl}/verify-email?token=${token}`;
 
@@ -98,7 +105,8 @@ const sendVerificationEmail = async (email, name, token) => {
       html: wrap('Verify Your Email', body),
     });
 
-    console.log('✅ Verification email sent to:', email);
+    console.log('✅ Verification email sent successfully to:', email);
+    console.log('📧 Message ID:', result.messageId);
     return result;
   } catch (error) {
     console.error('❌ Failed to send verification email:', error.message);
@@ -109,6 +117,10 @@ const sendVerificationEmail = async (email, name, token) => {
 // Send password reset email
 const sendPasswordResetEmail = async (email, name, token) => {
   try {
+    if (!isEmailConfigured()) {
+      throw new Error('Email service not configured');
+    }
+
     const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
     const url = `${baseUrl}/reset-password?token=${token}`;
 
@@ -140,7 +152,8 @@ const sendPasswordResetEmail = async (email, name, token) => {
       html: wrap('Reset Your Password', body),
     });
 
-    console.log('✅ Password reset email sent to:', email);
+    console.log('✅ Password reset email sent successfully to:', email);
+    console.log('📧 Message ID:', result.messageId);
     return result;
   } catch (error) {
     console.error('❌ Failed to send password reset email:', error.message);
@@ -148,4 +161,4 @@ const sendPasswordResetEmail = async (email, name, token) => {
   }
 };
 
-module.exports = { isEmailConfigured, sendVerificationEmail, sendPasswordResetEmail };
+module.exports = { isEmailConfigured, sendVerificationEmail, sendPasswordResetEmail, transporter };
