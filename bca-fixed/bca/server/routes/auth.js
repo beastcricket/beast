@@ -10,7 +10,7 @@ const {
 } = require('../utils/jwt');
 
 const { authenticate } = require('../middleware/auth');
-const { isEmailConfigured, sendVerificationEmail } = require('../utils/email');
+const { isEmailConfigured, sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'hirishi2020@gmail.com').toLowerCase();
 
@@ -106,10 +106,11 @@ router.post('/verify-email', async (req, res) => {
       }
     );
 
-    return res.json({ success: true, message: 'Email verified successfully. You can now log in.' });
+    console.log('✅ Email verified for user:', user.email);
+    return res.json({ success: true, message: 'Email verified successfully! You can now log in.' });
 
   } catch (err) {
-    console.log("VERIFY EMAIL ERROR:", err);
+    console.error('❌ VERIFY EMAIL ERROR:', err);
     return res.status(500).json({ error: 'Verification failed.' });
   }
 });
@@ -149,12 +150,17 @@ router.post('/resend-verification', async (req, res) => {
       }
     );
 
-    await sendVerificationEmail(emailClean, user.name, rawToken);
+    try {
+      await sendVerificationEmail(emailClean, user.name, rawToken);
+    } catch (emailErr) {
+      console.error('⚠️ Email send failed:', emailErr.message);
+      return res.status(503).json({ error: 'Failed to send verification email. Please try again later.' });
+    }
 
     return res.json({ success: true, message: 'Verification email resent. Check your inbox.' });
 
   } catch (err) {
-    console.log("RESEND VERIFICATION ERROR:", err);
+    console.error('❌ RESEND VERIFICATION ERROR:', err);
     return res.status(500).json({ error: 'Failed to resend verification email.' });
   }
 });
@@ -249,6 +255,97 @@ router.post('/logout', authenticate, async (req, res) => {
   res.clearCookie('refreshToken');
 
   return res.json({ success: true });
+});
+
+
+// ── FORGOT PASSWORD ───────────────────────────────────
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    const emailClean = email.toLowerCase().trim();
+    const user = await User.findOne({ email: emailClean });
+
+    if (!user) {
+      return res.json({ success: true, message: 'If that email exists, a password reset link has been sent.' });
+    }
+
+    if (!isEmailConfigured()) {
+      return res.status(503).json({ error: 'Email service is not configured. Please contact support.' });
+    }
+
+    const rawToken    = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          resetToken:       hashedToken,
+          resetTokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
+        },
+      }
+    );
+
+    try {
+      await sendPasswordResetEmail(emailClean, user.name, rawToken);
+    } catch (emailErr) {
+      console.error('⚠️ Email send failed:', emailErr.message);
+      return res.status(503).json({ error: 'Failed to send password reset email. Please try again later.' });
+    }
+
+    return res.json({ success: true, message: 'Password reset email sent. Check your inbox.' });
+
+  } catch (err) {
+    console.error('❌ FORGOT PASSWORD ERROR:', err);
+    return res.status(500).json({ error: 'Failed to send password reset email.' });
+  }
+});
+
+
+// ── RESET PASSWORD ────────────────────────────────────
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password are required.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetToken:       hashedToken,
+      resetTokenExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset link. Please request a new one.' });
+    }
+
+    user.password = password;
+    await user.save();
+
+    await User.updateOne(
+      { _id: user._id },
+      { $unset: { resetToken: 1, resetTokenExpiry: 1 } }
+    );
+
+    console.log('✅ Password reset for user:', user.email);
+    return res.json({ success: true, message: 'Password reset successfully! You can now log in with your new password.' });
+
+  } catch (err) {
+    console.error('❌ RESET PASSWORD ERROR:', err);
+    return res.status(500).json({ error: 'Password reset failed.' });
+  }
 });
 
 
