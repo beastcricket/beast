@@ -3,32 +3,63 @@ const crypto = require('crypto');
 
 // Check if email service is configured
 const isEmailConfigured = () => {
+  // Check for SendGrid API key first
+  if (process.env.SENDGRID_API_KEY) {
+    return true;
+  }
+  // Fallback to Gmail
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
   return !!(user && pass && user.length > 0 && pass.length > 0);
 };
 
-// Create transporter with Gmail SMTP
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com',
-    pass: process.env.EMAIL_PASS || 'gdgzafbzoyjmgrxx',
-  },
-  tls: { rejectUnauthorized: false },
-});
+// Create transporter - try SendGrid first, fallback to Gmail
+let transporter;
 
-// Verify transporter on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email service verification failed:', error.message);
-  } else {
-    console.log('✅ Email service ready - connected to Gmail SMTP');
-    console.log('📧 Sending emails from:', process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com');
-  }
-});
+if (process.env.SENDGRID_API_KEY) {
+  // Use SendGrid (avoids Railway SMTP port blocking)
+  const sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  transporter = {
+    sendMail: async (mailOptions) => {
+      const msg = {
+        to: mailOptions.to,
+        from: mailOptions.from || 'beastcricketofficialauction@gmail.com',
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+      };
+      const result = await sgMail.send(msg);
+      return { messageId: result[0].headers['x-message-id'] };
+    },
+    verify: (callback) => callback(null, true),
+  };
+
+  console.log('✅ Email service configured with SendGrid');
+} else {
+  // Use Gmail SMTP with increased timeout
+  transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.EMAIL_PORT || '587'),
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com',
+      pass: process.env.EMAIL_PASS || 'gdgzafbzoyjmgrxx',
+    },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 10000,
+    socketTimeout: 10000,
+  });
+
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ Email service verification failed:', error.message);
+    } else {
+      console.log('✅ Email service ready - connected to Gmail SMTP');
+      console.log('📧 Sending emails from:', process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com');
+    }
+  });
+}
 
 // Branded email HTML wrapper
 const wrap = (title, body) => `
