@@ -114,16 +114,30 @@ router.get('/:id/players', optionalAuth, async (req, res) => {
 router.post('/:id/players', authenticate, authorize('organizer','admin'), upload.single('image'), async (req, res) => {
   try {
     const { name, role, category, nationality, age, basePrice, matches, runs, wickets, average, strikeRate, economy } = req.body;
+
+    if (!name || !role || !category) {
+      return res.status(400).json({ error: 'Name, role, and category are required.' });
+    }
+
+    const imageUrl = getImageUrl(req.file);
+    if (req.file) {
+      console.log('📤 Player image processed:', imageUrl);
+    }
+
     const player = new Player({
       auctionId: req.params.id, name, role, category,
       nationality: nationality||'Indian', age: age?parseInt(age):undefined,
       basePrice: parseInt(basePrice),
-      imageUrl: getImageUrl(req.file),
+      imageUrl,
       stats: { matches:parseInt(matches)||0, runs:parseInt(runs)||0, wickets:parseInt(wickets)||0, average:parseFloat(average)||0, strikeRate:parseFloat(strikeRate)||0, economy:parseFloat(economy)||0 }
     });
     await player.save();
+    console.log('✅ Player created:', name, '| image:', imageUrl || 'none');
     res.status(201).json({ success: true, player });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    console.error('❌ Create player error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 router.delete('/:id/players/:playerId', authenticate, authorize('organizer','admin'), async (req, res) => {
@@ -186,7 +200,17 @@ router.post('/:id/teams', authenticate, authorize('organizer','admin'), upload.s
   try {
     const auction = await Auction.findById(req.params.id);
     if (!auction) return res.status(404).json({ error: 'Auction not found' });
+
     const { name, shortName, ownerName, city, primaryColor, maxPlayers } = req.body;
+    if (!name || !shortName) {
+      return res.status(400).json({ error: 'Team name and short code are required.' });
+    }
+
+    const logoUrl = getImageUrl(req.file);
+    if (req.file) {
+      console.log('📤 Team logo processed:', logoUrl);
+    }
+
     const team = new Team({
       auctionId: req.params.id,
       name, shortName: shortName.toUpperCase().slice(0,4),
@@ -197,11 +221,15 @@ router.post('/:id/teams', authenticate, authorize('organizer','admin'), upload.s
       initialPurse: auction.totalPursePerTeam,
       maxPlayers: parseInt(maxPlayers)||15,
       rtmTotal: auction.rtmPerTeam,
-      logo: getImageUrl(req.file),
+      logo: logoUrl,
     });
     await team.save();
+    console.log('✅ Team created:', name, '| logo:', logoUrl || 'none');
     res.status(201).json({ success: true, team });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    console.error('❌ Create team error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 router.put('/:id/teams/:teamId', authenticate, authorize('organizer','admin'), upload.single('logo'), async (req, res) => {

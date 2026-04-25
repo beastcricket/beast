@@ -185,10 +185,16 @@ mongoose.connect(MONGODB_URI, {
   console.log('✅ MongoDB connected');
 
   console.log('📧 Email Configuration:');
+  console.log('  SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? '✅ Set (SendGrid)' : '❌ Not set (using Gmail)');
   console.log('  EMAIL_USER:', process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com');
   console.log('  EMAIL_HOST:', process.env.EMAIL_HOST || 'smtp.gmail.com');
   console.log('  EMAIL_PORT:', process.env.EMAIL_PORT || '587');
   console.log('  FRONTEND_URL:', process.env.FRONTEND_URL || 'http://localhost:3000');
+
+  console.log('📸 Cloudinary Configuration:');
+  console.log('  CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME || 'dqvxvqvxv (default)');
+  console.log('  CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? '✅ Set' : '⚠️ Using default (QSfXbiirOygQpNaBKSDfMWXDv_8)');
+  console.log('  CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '✅ Set' : '❌ Not set');
 
   // Initialize socket auction engine
   require('./socket/auctionEngine')(io);
