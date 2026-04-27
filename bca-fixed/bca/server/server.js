@@ -185,10 +185,12 @@ mongoose.connect(MONGODB_URI, {
   console.log('✅ MongoDB connected');
 
   console.log('📧 Email Configuration:');
-  console.log('  SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? '✅ Set (SendGrid)' : '❌ Not set (using Gmail)');
-  console.log('  EMAIL_USER:', process.env.EMAIL_USER || 'beastcricketofficialauction@gmail.com');
-  console.log('  EMAIL_HOST:', process.env.EMAIL_HOST || 'smtp.gmail.com');
-  console.log('  EMAIL_PORT:', process.env.EMAIL_PORT || '587');
+  if (process.env.RESEND_API_KEY) {
+    console.log('  ✅ Using Resend.com (works on Railway)');
+  } else {
+    console.log('  ⚠️ Using Ethereal Email (test service)');
+    console.log('  📧 Check console for preview URLs');
+  }
   console.log('  FRONTEND_URL:', process.env.FRONTEND_URL || 'http://localhost:3000');
 
   console.log('📸 Cloudinary Configuration:');
