@@ -186,10 +186,13 @@ mongoose.connect(MONGODB_URI, {
 
   console.log('📧 Email Configuration:');
   if (process.env.RESEND_API_KEY) {
+    console.log('  ✅ RESEND_API_KEY is SET');
     console.log('  ✅ Using Resend.com (works on Railway)');
+    console.log('  ✅ Emails will be sent to user Gmail inbox');
   } else {
-    console.log('  ⚠️ Using Ethereal Email (test service)');
-    console.log('  📧 Check console for preview URLs');
+    console.log('  ❌ RESEND_API_KEY is NOT SET');
+    console.log('  ⚠️ Using Gmail SMTP fallback (may timeout on Railway)');
+    console.log('  📧 To enable real emails, set RESEND_API_KEY in Railway');
   }
   console.log('  FRONTEND_URL:', process.env.FRONTEND_URL || 'http://localhost:3000');
 
