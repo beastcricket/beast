@@ -63,13 +63,23 @@ export default function TeamOwnerDashboard() {
 
   useEffect(()=>{ bootstrap(); },[]);
 
-  // Real-time: listen for playerSold events and update purse + squad instantly
+  // Real-time: listen for auction events and update state instantly
   useEffect(() => {
     if (!selTeam?.auction?._id) return;
 
     const socket = getSocket();
     socket.emit('joinAuction', { auctionId: selTeam.auction._id });
 
+    // Listen for auction start
+    const handleAuctionStarted = () => {
+      toast.success('🔴 Auction started! Bidding is live.');
+      setSelTeam((prev: any) => {
+        if (!prev) return prev;
+        return { ...prev, auction: { ...prev.auction, status: 'active' } };
+      });
+    };
+
+    // Listen for player sold
     const handlePlayerSold = (data: any) => {
       if (data.soldTo === selTeam._id) {
         setSelTeam((prev: any) => {
@@ -85,10 +95,25 @@ export default function TeamOwnerDashboard() {
       }
     };
 
+    // Listen for auction completion
+    const handleAuctionCompleted = (data: any) => {
+      if (data.auctionId === selTeam.auction._id) {
+        toast.success('✅ Auction completed! View your final results.');
+        setSelTeam((prev: any) => {
+          if (!prev) return prev;
+          return { ...prev, auction: { ...prev.auction, status: 'completed' } };
+        });
+      }
+    };
+
+    socket.on('auctionStarted', handleAuctionStarted);
     socket.on('playerSold', handlePlayerSold);
+    socket.on('auctionCompleted', handleAuctionCompleted);
 
     return () => {
+      socket.off('auctionStarted', handleAuctionStarted);
       socket.off('playerSold', handlePlayerSold);
+      socket.off('auctionCompleted', handleAuctionCompleted);
     };
   }, [selTeam?.auction?._id, selTeam?._id]);
 
@@ -904,6 +929,80 @@ export default function TeamOwnerDashboard() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Final Results — shown when the selected team's auction is completed */}
+              {selTeam?.auction?.status === 'completed' && (
+                <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="mt-10 space-y-6">
+                  {/* Final Results Header */}
+                  <div className="bg-glass-premium rounded-xl p-8 border border-primary/20">
+                    <h2 className="font-heading text-3xl uppercase tracking-wider text-foreground mb-6" style={{fontFamily:'Oswald,sans-serif'}}>
+                      Final <span className="text-gradient-gold">Results</span>
+                    </h2>
+
+                    {/* Final Squad Stats */}
+                    <div className="grid grid-cols-3 gap-4 mb-8">
+                      <div className="bg-glass-navy rounded-lg p-4 text-center" style={{background:'hsla(222,42%,7%,0.97)'}}>
+                        <div className="text-xs font-heading uppercase text-muted-foreground mb-1" style={{fontFamily:'Oswald,sans-serif'}}>Players Acquired</div>
+                        <div className="text-3xl font-heading text-gradient-gold" style={{fontFamily:'Oswald,sans-serif'}}>{squad.length}</div>
+                      </div>
+                      <div className="bg-glass-navy rounded-lg p-4 text-center" style={{background:'hsla(222,42%,7%,0.97)'}}>
+                        <div className="text-xs font-heading uppercase text-muted-foreground mb-1" style={{fontFamily:'Oswald,sans-serif'}}>Total Spent</div>
+                        <div className="text-3xl font-heading text-foreground" style={{fontFamily:'Oswald,sans-serif'}}>
+                          {fmt((selTeam.initialPurse || 0) - (selTeam.purse || 0))}
+                        </div>
+                      </div>
+                      <div className="bg-glass-navy rounded-lg p-4 text-center" style={{background:'hsla(222,42%,7%,0.97)'}}>
+                        <div className="text-xs font-heading uppercase text-muted-foreground mb-1" style={{fontFamily:'Oswald,sans-serif'}}>Remaining Purse</div>
+                        <div className="text-3xl font-heading text-primary" style={{fontFamily:'Oswald,sans-serif'}}>{fmt(selTeam.purse || 0)}</div>
+                      </div>
+                    </div>
+
+                    {/* Final Squad */}
+                    {squad.length > 0 && (
+                      <div>
+                        <h3 className="font-heading text-xl uppercase tracking-wider text-foreground mb-4" style={{fontFamily:'Oswald,sans-serif'}}>Your Squad</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {squad.map((player: any) => (
+                            <div key={player._id} className="bg-glass-premium rounded-lg p-4" style={{border:'1px solid rgba(245,158,11,0.15)'}}>
+                              <div className="flex items-start justify-between mb-3">
+                                <div>
+                                  <h4 className="font-heading text-lg text-foreground" style={{fontFamily:'Oswald,sans-serif'}}>{player.name}</h4>
+                                  <p className="text-xs text-muted-foreground">{player.role} · {player.category}</p>
+                                </div>
+                                <span className="px-2 py-1 rounded-full text-xs font-heading bg-green-500/20 text-green-400 border border-green-500/30">
+                                  ✅ Sold
+                                </span>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                <div>Base Price: {fmt(player.basePrice)}</div>
+                                <div className="text-primary font-bold" style={{fontFamily:'Oswald,sans-serif'}}>Sold at: {fmt(player.soldPrice || player.basePrice)}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4">
+                    <Link
+                      href="/auctions"
+                      className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-heading uppercase tracking-wider text-center glow-gold hover:scale-[1.02] transition-all"
+                      style={{fontFamily:'Oswald,sans-serif',letterSpacing:'1px'}}
+                    >
+                      View All Auctions
+                    </Link>
+                    <button
+                      onClick={() => setView('squad')}
+                      className="flex-1 py-3 rounded-lg border border-primary/40 text-primary font-heading uppercase tracking-wider text-center hover:bg-primary/10 transition-all"
+                      style={{fontFamily:'Oswald,sans-serif',letterSpacing:'1px'}}
+                    >
+                      View Full Squad
+                    </button>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Edit Team Modal */}
               <AnimatePresence>
